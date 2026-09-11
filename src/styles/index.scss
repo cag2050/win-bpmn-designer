@@ -1,0 +1,45 @@
+// 设计器根变量。宿主可以通过覆盖这些 CSS 变量做主题定制，而不必改源码。
+.win-bpmn-designer {
+  --wbd-border-color: #dcdfe6;
+  --wbd-bg-color: #fff;
+  --wbd-canvas-bg: #fafafa;
+  --wbd-toolbar-height: 44px;
+  --wbd-panel-width: 320px;
+
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--wbd-bg-color);
+}
+
+.win-bpmn-designer__body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.win-bpmn-designer__canvas {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  background-color: var(--wbd-canvas-bg);
+
+  // bpmn-js 会把 svg 直接挂在容器里，必须撑满，否则画布高度为 0
+  .bjs-container {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.win-bpmn-designer__panel {
+  flex: 0 0 var(--wbd-panel-width);
+  overflow-y: auto;
+  border-left: 1px solid var(--wbd-border-color);
+}
+
+// 去掉 bpmn.io 的水印占位，避免和工具栏重叠
+.win-bpmn-designer .bjs-powered-by {
+  display: none;
+}

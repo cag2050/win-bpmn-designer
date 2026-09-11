@@ -1,18 +1,63 @@
 {
   "name": "win-bpmn-designer",
-  "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
+  "description": "基于 Vue 3 + bpmn-js 的 Flowable 流程设计器组件库",
   "type": "module",
+  "license": "MIT",
+  "sideEffects": [
+    "**/*.css",
+    "**/*.scss",
+    "**/styles/index.ts"
+  ],
+  "main": "./dist/win-bpmn-designer.umd.cjs",
+  "module": "./dist/win-bpmn-designer.mjs",
+  "types": "./dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/win-bpmn-designer.mjs",
+      "require": "./dist/win-bpmn-designer.umd.cjs"
+    },
+    "./style.css": "./dist/style.css",
+    "./dist/style.css": "./dist/style.css",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "doc"
+  ],
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "dev": "vite -c vite.config.playground.ts",
+    "dev:standalone": "vite -c vite.config.standalone.ts",
+    "build": "npm run build:lib && npm run build:playground && npm run build:standalone",
+    "build:lib": "npm run typecheck && cross-env LIB_FORMAT=es vite build -c vite.config.lib.ts && cross-env LIB_FORMAT=umd vite build -c vite.config.lib.ts",
+    "build:playground": "vite build -c vite.config.playground.ts",
+    "build:standalone": "vite build -c vite.config.standalone.ts",
+    "preview": "vite preview -c vite.config.playground.ts",
+    "typecheck": "vue-tsc --noEmit -p tsconfig.json"
+  },
+  "peerDependencies": {
+    "element-plus": "^2.9.0",
+    "vue": "^3.4.0"
   },
   "dependencies": {
-    "vue": "^3.5.42"
+    "bpmn-js": "^18.28.0",
+    "bpmn-moddle": "^10.2.0",
+    "diagram-js": "^15.26.0",
+    "min-dash": "^5.1.0",
+    "min-dom": "^4.2.0"
   },
   "devDependencies": {
+    "@types/node": "^22.20.2",
     "@vitejs/plugin-vue": "^6.0.8",
-    "vite": "^8.3.0"
+    "cross-env": "^10.1.0",
+    "element-plus": "^2.14.5",
+    "sass-embedded": "^1.104.0",
+    "typescript": "^5.9.3",
+    "vite": "^8.3.0",
+    "vite-plugin-dts": "^5.1.0",
+    "vue": "^3.5.42",
+    "vue-tsc": "^3.3.11"
   }
 }
