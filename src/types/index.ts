@@ -76,6 +76,12 @@ export interface DesignerResolvers {
   classPicker?: unknown
 }
 
+/** 下拉选项。 */
+export interface SelectOption {
+  label: string
+  value: string
+}
+
 /**
  * 属性面板的一个分组。
  * 业务方可注册新组，或用同一个 id 覆盖内置组的实现（见 registerPropertyGroup）。

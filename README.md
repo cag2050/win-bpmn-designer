@@ -4,9 +4,9 @@
 
 完整技术方案见 [`doc/方案.md`](./doc/方案.md)。
 
-> 当前进度：**M2 已完成**（TS 化脚手架、三套构建配置、Modeler 封装、内置工具栏、
-> palette / context-pad / 替换菜单汉化、Flowable moddle 扩展、属性面板框架与基础属性组）。
-> 画出的图已带 Flowable 属性，可部署到引擎；监听器、多实例、表单属性等在 M3 落地。
+> 当前进度：**M3 已完成**（脚手架、三套构建、Modeler 封装、工具栏、全量汉化、
+> Flowable moddle 扩展、属性面板框架与 13 个内置属性组）。
+> 已覆盖常见审批流的建模需求；resolvers / slots / 只读模式 / standalone 在 M4 落地。
 
 ## 安装
 
@@ -80,11 +80,23 @@ async function submit() {
 
 ### 属性面板与自定义属性组
 
-内置四组：流程（候选发起人/组）、常规（标识/名称/描述/异步/排他）、用户任务（办理人、候选人组、
-到期时间、表单标识等）、流转条件。所有写操作经 `modeling`，因此完整支持撤销/重做；
+内置 13 组，覆盖常见审批流的建模需求。所有写操作经 `modeling`，因此完整支持撤销/重做；
 字段清空时属性会从 XML 中移除，不会残留 `flowable:assignee=""`。
 
-业务方可注册自己的属性组，或用同一个 `id` 覆盖内置组：
+内置属性组（按 `order` 排列，业务方可插在中间）：
+
+| order | 组 | 覆盖内容 |
+| --- | --- | --- |
+| 10 / 20 | 流程 / 常规 | 候选发起人组；标识、名称、描述、异步、排他 |
+| 30 / 40 | 用户任务 / 流转条件 | 办理人、候选人组、到期时间、表单标识；条件表达式 |
+| 50 / 60 | 服务任务 / 多实例 | 四种实现方式互斥切换；串行·并行会签、集合、元素变量、循环基数、完成条件 |
+| 70 / 75 | 子流程 / 调用活动 | 事件子流程；被调用流程、业务键、变量继承 |
+| 80 / 85 | 边界事件 / 事件配置 | 中断开关；定时器三种形态、错误·信号·消息·升级引用 |
+| 90 | 表单属性 | 类型、变量、默认值、必填读写，`enum` 时可配枚举值 |
+| 100 / 110 | 执行 / 任务监听器 | 事件类型、三种实现方式、可嵌套注入字段 |
+
+监听器与表单属性这类一对多集合用内联可展开列表编辑，支持嵌套（监听器 → 注入字段、
+表单属性 → 枚举值）。删掉最后一条时会连 `<bpmn:extensionElements>` 一起移除，不留空标签。
 
 ```ts
 import { registerPropertyGroup, is } from 'win-bpmn-designer'
@@ -97,8 +109,9 @@ registerPropertyGroup({
 })
 ```
 
-组内可直接复用 `useElementProps` / `useProperty` 读写属性，用 `extension-elements.ts`
-里的一组 helper 操作 `<bpmn:extensionElements>`。
+组内可直接复用 `useElementProps` / `useProperty` 读写属性；一对多集合用
+`useExtensionCollection`（extensionElements 直接子元素）与 `useModdleCollection`（嵌套 isMany 属性），
+底层是 `extension-elements.ts` 里的一组 helper。
 
 ### iframe 集成（非 Vue 宿主）
 

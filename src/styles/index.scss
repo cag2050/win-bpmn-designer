@@ -87,6 +87,110 @@
   line-height: 1.4;
 }
 
+.win-bpmn-panel__readonly {
+  margin: 0;
+  color: #909399;
+  font-size: 12px;
+  word-break: break-all;
+}
+
+.win-bpmn-panel__collection {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.win-bpmn-panel__collection-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.win-bpmn-panel__collection-add {
+  padding: 0 4px;
+  color: #409eff;
+  font-size: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.win-bpmn-panel__collection-empty {
+  margin: 0;
+  padding: 6px 0;
+  color: #a8abb2;
+  font-size: 12px;
+}
+
+.win-bpmn-panel__collection-item {
+  border: 1px solid var(--wbd-border-color);
+  border-radius: 4px;
+}
+
+.win-bpmn-panel__collection-summary {
+  display: flex;
+  align-items: center;
+  padding: 4px 6px;
+}
+
+.win-bpmn-panel__collection-toggle {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 4px;
+  // 面板只有 320px 宽，不给 min-width:0 的话长类名会把整行撑破
+  min-width: 0;
+  padding: 0;
+  color: #606266;
+  font-size: 12px;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.win-bpmn-panel__collection-caret {
+  flex: 0 0 auto;
+  color: #a8abb2;
+}
+
+.win-bpmn-panel__collection-title {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.win-bpmn-panel__collection-remove {
+  flex: 0 0 auto;
+  padding: 0 4px;
+  color: #c0c4cc;
+  font-size: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+
+  &:hover {
+    color: #f56c6c;
+  }
+}
+
+.win-bpmn-panel__collection-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  border-top: 1px solid var(--wbd-border-color);
+}
+
+.win-bpmn-panel__collection-nested {
+  padding-left: 8px;
+  border-left: 2px solid var(--wbd-border-color);
+}
+
 .win-bpmn-toolbar {
   display: flex;
   flex: 0 0 auto;

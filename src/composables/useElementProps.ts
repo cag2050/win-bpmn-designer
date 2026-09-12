@@ -35,6 +35,8 @@ export interface ElementProps {
   revision: Ref<number>
   get: <T = unknown>(key: string) => T | undefined
   set: (key: string, value: unknown) => void
+  /** 一次写多个属性，合成一条撤销记录。切换互斥字段时必须用它，否则会留下半旧半新的中间态 */
+  setMany: (properties: Record<string, unknown>) => void
   setModdle: (target: ModdleElement, key: string, value: unknown) => void
   /** 建 moddle 元素（如 bpmn:Documentation / bpmn:FormalExpression），会自动补 id */
   create: (type: string, attrs?: Record<string, unknown>) => ModdleElement | undefined
@@ -98,10 +100,14 @@ export function useElementProps(element: ShallowRef<BpmnElement | undefined>): E
   }
 
   function set(key: string, value: unknown): void {
+    setMany({ [key]: value })
+  }
+
+  function setMany(properties: Record<string, unknown>): void {
     const target = element.value
     if (!target || !modeler.value) return
 
-    modeler.value.get<Modeling>('modeling').updateProperties(target, { [key]: value })
+    modeler.value.get<Modeling>('modeling').updateProperties(target, properties)
   }
 
   function setModdle(target: ModdleElement, key: string, value: unknown): void {
@@ -117,7 +123,7 @@ export function useElementProps(element: ShallowRef<BpmnElement | undefined>): E
     return modeler.value?.get<BpmnFactory>('bpmnFactory').create(type, attrs)
   }
 
-  return { bo, revision, get, set, setModdle, create }
+  return { bo, revision, get, set, setMany, setModdle, create }
 }
 
 /**
