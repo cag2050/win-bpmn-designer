@@ -1,9 +1,13 @@
 import Modeler from 'bpmn-js/lib/Modeler'
 
+import flowableModdle from '@/core/moddle/flowable.json'
 import { ContextPadFilterModule } from '@/core/modules/context-pad'
 import { PaletteFilterModule } from '@/core/modules/palette'
 import { createTranslateModule } from '@/core/modules/translate'
 import type { BpmnModeler, LocaleStore, ModelerOptions } from '@/types'
+
+/** Flowable 命名空间的 moddle descriptor，业务方可取出与自己的扩展合并。 */
+export const FlowableModdleDescriptor = flowableModdle
 
 export interface CreateModelerParams extends ModelerOptions {
   /** 画布挂载容器，必须已在 DOM 中且有确定的宽高 */
@@ -41,7 +45,8 @@ export function createModeler(params: CreateModelerParams): BpmnModeler {
     ],
     paletteFilter: { items: paletteItems },
     contextPadFilter: { items: contextPadItems },
-    // TODO(M2): 合并内置 flowable moddle 扩展
-    moddleExtensions: moddleExtensions as Record<string, never>,
+    // 用户的扩展展开在后面：可以追加自己的命名空间；
+    // 若真传了名为 flowable 的 key，则视为完全覆盖内置 descriptor 的逃生舱
+    moddleExtensions: { flowable: flowableModdle, ...moddleExtensions },
   })
 }

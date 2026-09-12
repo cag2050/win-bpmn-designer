@@ -5,9 +5,24 @@ import '@/styles'
 
 import BpmnCanvas from '@/components/BpmnCanvas.vue'
 import BpmnDesigner from '@/components/BpmnDesigner.vue'
+import BpmnPropertiesPanel from '@/components/PropertiesPanel/index.vue'
 import BpmnToolbar from '@/components/Toolbar/index.vue'
 
-export { BpmnCanvas, BpmnDesigner, BpmnToolbar }
+export { BpmnCanvas, BpmnDesigner, BpmnPropertiesPanel, BpmnToolbar }
+
+export {
+  getPropertyGroups,
+  registerPropertyGroup,
+  unregisterPropertyGroup,
+} from '@/components/PropertiesPanel/registry'
+export { registerBuiltinGroups } from '@/components/PropertiesPanel/builtin'
+export { default as BaseGroup } from '@/components/PropertiesPanel/groups/BaseGroup.vue'
+export { default as ConditionGroup } from '@/components/PropertiesPanel/groups/ConditionGroup.vue'
+export { default as ProcessGroup } from '@/components/PropertiesPanel/groups/ProcessGroup.vue'
+export { default as UserTaskGroup } from '@/components/PropertiesPanel/groups/UserTaskGroup.vue'
+export { default as PropList } from '@/components/PropertiesPanel/widgets/PropList.vue'
+export { default as PropSwitch } from '@/components/PropertiesPanel/widgets/PropSwitch.vue'
+export { default as PropText } from '@/components/PropertiesPanel/widgets/PropText.vue'
 
 export {
   alignElements,
@@ -22,8 +37,10 @@ export type { Alignment, Distribution } from '@/components/Toolbar/actions'
 
 export { useModeler, provideModeler, MODELER_KEY } from '@/composables/useModeler'
 export { useCommandStack } from '@/composables/useCommandStack'
+export { useElementProps, useProperty } from '@/composables/useElementProps'
+export type { ElementProps } from '@/composables/useElementProps'
 export { useSelection } from '@/composables/useSelection'
-export { createModeler } from '@/core/createModeler'
+export { createModeler, FlowableModdleDescriptor } from '@/core/createModeler'
 export type { CreateModelerParams } from '@/core/createModeler'
 
 export { ContextPadFilterModule } from '@/core/modules/context-pad'
@@ -37,6 +54,15 @@ export {
   isRoot,
 } from '@/helpers/element-utils'
 export { debounce } from '@/helpers/debounce'
+export {
+  addExtensionElement,
+  createExtensionElement,
+  ensureExtensionElements,
+  getExtensionElements,
+  getExtensionsOfType,
+  removeExtensionElement,
+  updateExtensionElement,
+} from '@/helpers/extension-elements'
 export {
   createEmptyDiagram,
   FLOWABLE_NAMESPACE,

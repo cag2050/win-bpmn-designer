@@ -4,9 +4,9 @@
 
 完整技术方案见 [`doc/方案.md`](./doc/方案.md)。
 
-> 当前进度：**M1 已完成**（TS 化脚手架、三套构建配置、Modeler 封装、内置工具栏、
-> palette / context-pad / 替换菜单汉化）。
-> 画布能画图并导出合法 BPMN XML，属性面板与 Flowable 扩展在 M2 落地。
+> 当前进度：**M2 已完成**（TS 化脚手架、三套构建配置、Modeler 封装、内置工具栏、
+> palette / context-pad / 替换菜单汉化、Flowable moddle 扩展、属性面板框架与基础属性组）。
+> 画出的图已带 Flowable 属性，可部署到引擎；监听器、多实例、表单属性等在 M3 落地。
 
 ## 安装
 
@@ -72,10 +72,33 @@ async function submit() {
 | `v-model:xml` | — | 流程 XML，内容变更后 300ms 防抖回写 |
 | `locale` | 取全局配置 | `zh-CN` / `en-US`，支持运行时切换 |
 | `toolbar` | `true` | 是否渲染内置工具栏；传入 `#toolbar` slot 时整条替换 |
+| `panel` | `true` | 是否渲染内置属性面板；传入 `#panel` slot 时整块替换 |
 | `options.paletteItems` | 全部显示 | palette 白名单，填内置条目 id（如 `create.task`） |
 | `options.contextPadItems` | 全部显示 | context-pad 白名单（如 `append.end-event`、`connect`） |
 
 内置工具栏含：新建、导入、导出 XML / SVG、撤销 / 重做、缩放与适应画布、6 种对齐与 2 种均匀分布。
+
+### 属性面板与自定义属性组
+
+内置四组：流程（候选发起人/组）、常规（标识/名称/描述/异步/排他）、用户任务（办理人、候选人组、
+到期时间、表单标识等）、流转条件。所有写操作经 `modeling`，因此完整支持撤销/重做；
+字段清空时属性会从 XML 中移除，不会残留 `flowable:assignee=""`。
+
+业务方可注册自己的属性组，或用同一个 `id` 覆盖内置组：
+
+```ts
+import { registerPropertyGroup, is } from 'win-bpmn-designer'
+
+registerPropertyGroup({
+  id: 'my-service-task',
+  order: 35,
+  match: (el) => is(el, 'bpmn:ServiceTask'),
+  component: MyServiceTaskGroup,
+})
+```
+
+组内可直接复用 `useElementProps` / `useProperty` 读写属性，用 `extension-elements.ts`
+里的一组 helper 操作 `<bpmn:extensionElements>`。
 
 ### iframe 集成（非 Vue 宿主）
 

@@ -39,6 +39,54 @@
   border-left: 1px solid var(--wbd-border-color);
 }
 
+.win-bpmn-panel__header {
+  padding: 12px 14px;
+  color: #303133;
+  font-weight: 600;
+  font-size: 14px;
+  border-bottom: 1px solid var(--wbd-border-color);
+}
+
+.win-bpmn-panel__empty {
+  margin: 0;
+  padding: 24px 14px;
+  color: #909399;
+  font-size: 13px;
+  text-align: center;
+}
+
+.win-bpmn-panel__group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.win-bpmn-panel__row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  // 开关类字段横排更紧凑
+  &--inline {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.win-bpmn-panel__label {
+  color: #606266;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.win-bpmn-panel__hint {
+  margin: 0;
+  color: #a8abb2;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
 .win-bpmn-toolbar {
   display: flex;
   flex: 0 0 auto;

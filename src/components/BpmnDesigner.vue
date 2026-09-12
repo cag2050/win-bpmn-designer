@@ -15,6 +15,7 @@ import type {
 } from '@/types'
 
 import BpmnCanvas from './BpmnCanvas.vue'
+import BpmnPropertiesPanel from './PropertiesPanel/index.vue'
 import BpmnToolbar from './Toolbar/index.vue'
 import { downloadFile } from './Toolbar/actions'
 
@@ -31,6 +32,8 @@ const props = withDefaults(
     locale?: LocaleName
     /** 是否渲染内置工具栏；传入 #toolbar slot 时本 prop 无效 */
     toolbar?: boolean
+    /** 是否渲染内置属性面板；传入 #panel slot 时本 prop 无效 */
+    panel?: boolean
     /** 业务集成扩展点（M4） */
     resolvers?: DesignerResolvers
   }>(),
@@ -40,6 +43,7 @@ const props = withDefaults(
     readonly: false,
     locale: undefined,
     toolbar: true,
+    panel: true,
     resolvers: undefined,
   },
 )
@@ -199,8 +203,12 @@ defineExpose<BpmnDesignerExpose & { save: () => Promise<void>; dirty: typeof dir
         @error="(error: unknown) => emit('error', error)"
       />
 
-      <!-- M2: PropertiesPanel -->
-      <slot name="panel" />
+      <!-- slot 的回退内容即默认面板：传入 #panel 时整块被替换 -->
+      <div v-if="props.panel || $slots.panel" class="win-bpmn-designer__panel">
+        <slot name="panel">
+          <BpmnPropertiesPanel :locale="locale" />
+        </slot>
+      </div>
     </div>
   </div>
 </template>

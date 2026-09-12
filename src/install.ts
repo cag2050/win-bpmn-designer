@@ -2,6 +2,7 @@ import type { App, Plugin } from 'vue'
 
 import BpmnCanvas from '@/components/BpmnCanvas.vue'
 import BpmnDesigner from '@/components/BpmnDesigner.vue'
+import BpmnPropertiesPanel from '@/components/PropertiesPanel/index.vue'
 import BpmnToolbar from '@/components/Toolbar/index.vue'
 import { DEFAULT_LOCALE } from '@/locales'
 import { GLOBAL_OPTIONS_KEY } from '@/options'
@@ -13,6 +14,7 @@ export function install(app: App, options: WinBpmnDesignerOptions = {}): void {
   app.component('BpmnDesigner', BpmnDesigner)
   app.component('BpmnCanvas', BpmnCanvas)
   app.component('BpmnToolbar', BpmnToolbar)
+  app.component('BpmnPropertiesPanel', BpmnPropertiesPanel)
 }
 
 const plugin: Plugin = { install }

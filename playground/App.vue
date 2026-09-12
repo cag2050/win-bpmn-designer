@@ -19,6 +19,8 @@ async function showXML(): Promise<void> {
 
 function onReady(): void {
   ElMessage.success('画布已就绪')
+  // 方便在浏览器控制台里直接把玩原生 modeler
+  ;(window as unknown as { modeler?: unknown }).modeler = designerRef.value?.getModeler()
 }
 </script>
 

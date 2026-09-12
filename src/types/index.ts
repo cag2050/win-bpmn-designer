@@ -1,4 +1,5 @@
 import type { ModuleDeclaration } from 'didi'
+import type { Component } from 'vue'
 
 import type Modeler from 'bpmn-js/lib/Modeler'
 
@@ -73,6 +74,19 @@ export interface DesignerResolvers {
   expressionEditor?: unknown
   /** Java 类 / delegate 选择器 */
   classPicker?: unknown
+}
+
+/**
+ * 属性面板的一个分组。
+ * 业务方可注册新组，或用同一个 id 覆盖内置组的实现（见 registerPropertyGroup）。
+ */
+export interface PropertyGroup {
+  id: string
+  /** 命中哪些元素 */
+  match: (element: BpmnElement) => boolean
+  /** 升序排列，内置组用 10/20/30/40，中间留了间隔供插入 */
+  order: number
+  component: Component
 }
 
 /** 传给 bpmn-js Modeler 的透传配置。 */
