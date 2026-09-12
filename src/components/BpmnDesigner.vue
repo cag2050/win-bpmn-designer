@@ -191,7 +191,7 @@ async function onExportSvg(): Promise<void> {
   downloadFile(await exportSVG(), 'process.svg', 'image/svg+xml')
 }
 
-defineExpose<BpmnDesignerExpose & { save: () => Promise<void>; dirty: typeof dirty }>({
+defineExpose<BpmnDesignerExpose>({
   importXML,
   createNew,
   exportXML,

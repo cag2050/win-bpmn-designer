@@ -25,3 +25,6 @@ dist-standalone
 *.njsproj
 *.sln
 *.sw?
+
+# Vitest browser mode 的失败截图与附件
+.vitest/

@@ -1,6 +1,7 @@
 import type { LocaleMessages, LocaleName } from '@/types'
 
 import enUS from './en-US'
+import { interpolate } from './interpolate'
 import zhCN from './zh-CN'
 import zhCNBpmn from './zh-CN.bpmn'
 
@@ -26,9 +27,7 @@ export function translate(
   key: string,
   replacements?: Record<string, string>,
 ): string {
-  const template = locales[locale]?.[key] ?? key
-
-  return template.replace(/{([^}]+)}/g, (_, name: string) => replacements?.[name] ?? `{${name}}`)
+  return interpolate(locales[locale]?.[key] ?? key, replacements)
 }
 
 export { enUS, zhCN, zhCNBpmn }

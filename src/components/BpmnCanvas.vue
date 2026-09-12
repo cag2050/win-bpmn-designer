@@ -6,7 +6,7 @@ import { createModeler } from '@/core/createModeler'
 import { setModelerReadonly } from '@/core/modules/readonly'
 import type { ReadonlyStore } from '@/core/modules/readonly'
 import { createEmptyDiagram } from '@/helpers/xml-templates'
-import { DEFAULT_LOCALE, locales } from '@/locales'
+import { DEFAULT_LOCALE, locales, translate } from '@/locales'
 import type {
   BpmnElement,
   BpmnModeler,
@@ -60,7 +60,14 @@ async function importXML(xml: string): Promise<void> {
 }
 
 async function createNew(options?: CreateProcessOptions): Promise<void> {
-  await importXML(createEmptyDiagram(options))
+  // 名字按当前语言给默认值，createEmptyDiagram 自己不认识 locale
+  await importXML(
+    createEmptyDiagram({
+      processName: translate(props.locale, 'designer.defaults.processName'),
+      startEventName: translate(props.locale, 'designer.defaults.startEventName'),
+      ...options,
+    }),
+  )
 }
 
 async function exportXML(options: { format?: boolean } = {}): Promise<string> {

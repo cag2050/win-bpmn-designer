@@ -6,7 +6,12 @@ import BpmnDesigner from '@/components/BpmnDesigner.vue'
 import { version } from '@/index'
 import type { DesignerResolvers, LocaleName, ValidationResult } from '@/types'
 
+import { registerPropertyGroup } from '@/components/PropertiesPanel/registry'
+import { is } from '@/helpers/element-utils'
+
+import DemoGroup from './DemoGroup.vue'
 import UserPicker from './UserPicker.vue'
+import sampleXml from '../test/fixtures/approval-full.bpmn?raw'
 
 const designerRef = useTemplateRef<InstanceType<typeof BpmnDesigner>>('designer')
 
@@ -18,6 +23,20 @@ const selected = ref('—')
 
 // 只接了选人一项，其余（表单、表达式、Java 类）留空以验证「未传即降级」
 const resolvers: DesignerResolvers = { userPicker: UserPicker, groupPicker: UserPicker }
+
+// 演示核心扩展点：注册一个业务方自己的属性组（order 35 插在内置组中间）
+registerPropertyGroup({
+  id: 'demo-extra',
+  order: 35,
+  match: (el) => is(el, 'bpmn:UserTask'),
+  component: DemoGroup,
+})
+
+// 与单测快照同一份样例，playground 顺便充当人工回归入口
+async function loadSample(): Promise<void> {
+  await designerRef.value?.importXML(sampleXml)
+  ElMessage.success('已载入示例流程')
+}
 
 async function showXML(): Promise<void> {
   xmlPreview.value = (await designerRef.value?.exportXML()) ?? ''
@@ -63,6 +82,7 @@ function onElementSelect(payload: { element?: { id: string; type: string } }): v
         active-text="EN"
         inactive-text="中"
       />
+      <ElButton size="small" @click="loadSample">载入示例</ElButton>
       <ElButton size="small" @click="runValidate">校验</ElButton>
       <ElButton size="small" type="primary" @click="showXML">查看 XML</ElButton>
     </header>

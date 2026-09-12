@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+
+# 同一分支的新推送取消旧运行，省 runner 时间
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      # 不做条件判断：即便浏览器本体命中缓存，系统依赖库仍需安装
+      - run: npx playwright install --with-deps chromium
+
+      # 顺序刻意按「便宜的先失败」排
+      - run: npm run typecheck
+      - run: npm run test:unit
+      - run: npm run test:browser
+      - run: npm run build

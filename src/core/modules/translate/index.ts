@@ -1,3 +1,4 @@
+import { interpolate } from '@/locales/interpolate'
 import type { LocaleMessages, LocaleStore } from '@/types'
 
 /**
@@ -8,9 +9,7 @@ import type { LocaleMessages, LocaleStore } from '@/types'
  */
 export function createTranslate(getMessages: () => LocaleMessages) {
   return function translate(template: string, replacements?: Record<string, string>): string {
-    const translated = getMessages()[template] ?? template
-
-    return translated.replace(/{([^}]+)}/g, (_, key: string) => replacements?.[key] ?? `{${key}}`)
+    return interpolate(getMessages()[template] ?? template, replacements)
   }
 }
 

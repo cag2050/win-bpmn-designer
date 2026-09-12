@@ -4,9 +4,20 @@
 
 完整技术方案见 [`doc/方案.md`](./doc/方案.md)。
 
-> 当前进度：**M4 已完成**（脚手架、三套构建、Modeler 封装、工具栏、全量汉化、
-> Flowable moddle 扩展、13 个内置属性组、resolvers / 具名 slot / 只读预览 / validate）。
-> 业务方已可接入自己的选人组件；i18n 完善、单测、发布 CI 在 M5 落地。
+> 当前进度：**M5 已完成**，M0–M5 全部收尾，版本 `0.0.1`。
+> 功能齐备（13 个内置属性组、resolvers、具名 slot、只读预览、validate），
+> 并已补上 83 个自动化测试与 CI。
+
+> [!IMPORTANT]
+> **本库从未在真实 Flowable 引擎上做过部署验证。**
+> 导出的 XML 只经由 bpmn-moddle 对一份**自行编写**的 moddle descriptor 做过往返校验
+> （社区没有官方维护的 `flowable-moddle`），属性名逐条对照过 Flowable 的
+> `BpmnXMLConstants.java` 与其仓库内的测试资源，但**技术方案里给 M2 定的验收标准
+> 「可部署到 Flowable 引擎跑通」并未达成** —— 整个开发过程中都没有可用的引擎环境。
+>
+> 正式采用前，请先拿一份导出文件实际部署一次（`POST /repository/deployments`），
+> 并跑通一个实例。若发现属性不被识别，多半是 `src/core/moddle/flowable.json`
+> 里某个名字需要修正。
 
 ## 安装
 
@@ -63,6 +74,7 @@ async function submit() {
 | `undo()` / `redo()` | 撤销 / 重做 |
 | `zoom(step)` / `fitViewport()` | 缩放 / 适应画布 |
 | `validate()` | 基础建模校验，返回 `{ valid, issues }` |
+| `dirty` | `Ref<boolean>`，相对上次导入/保存是否有改动 |
 | `save()` | 导出并派发 `save` 事件 |
 | `getModeler()` | 逃生舱：拿到原生 bpmn-js Modeler |
 
@@ -78,6 +90,8 @@ async function submit() {
 | `resolvers` | — | 业务扩展点，见下文「接入自己的选人组件」 |
 | `options.paletteItems` | 全部显示 | palette 白名单，填内置条目 id（如 `create.task`） |
 | `options.contextPadItems` | 全部显示 | context-pad 白名单（如 `append.end-event`、`connect`） |
+
+`<BpmnPropertiesPanel>` 另有 `hiddenGroups?: string[]`，用于同页面多个设计器需要不同组集合的场景。
 
 内置工具栏含：新建、导入、导出 XML / SVG、撤销 / 重做、缩放与适应画布、6 种对齐与 2 种均匀分布。
 
@@ -172,6 +186,54 @@ iframe.contentWindow.postMessage(
 
 嵌入时建议用 `?origin=<宿主 origin>` 指定白名单，未指定则退化为 `*`（仅适合内网/开发环境）。
 
+## 兼容性
+
+| 项 | 要求 |
+| --- | --- |
+| Vue | `^3.4.0`（peer） |
+| Element Plus | `^2.9.0`（peer） |
+| Node | `>=20.12`（仅开发/构建时需要） |
+| TypeScript | `moduleResolution` 需为 `bundler`（见下） |
+
+类型声明是**逐文件 emit** 的，入口里用的是无扩展名的相对 import，因此消费方需要
+`"moduleResolution": "bundler"`（Vite / webpack / Rollup 项目的默认值）。
+`node16` / `nodenext` 会报 TS2834 —— 试过用 api-extractor 合并成单文件，但它会丢掉
+vue-tsc 生成的 `__VLS_*` 内部辅助类型，产出比现在更糟，故保留现状。
+
+## 测试
+
+```bash
+npm test             # 两套一起跑（83 个用例）
+npm run test:unit    # 纯逻辑 + XML 往返快照，node 环境，约 3 秒
+npm run test:browser # 真 Chromium，覆盖 Modeler / 只读 / 面板写入
+npm run test:watch   # 监听模式
+```
+
+分两套 project 的原因：**happy-dom 与 jsdom 都没实现 SVG 的 `getBBox` /
+`createSVGPoint` / `createSVGMatrix`，bpmn-js 的 `Modeler` 在那两个环境里起不来。**
+给它们打桩等于「测自己的桩」，几何值全是假的，拖拽与只读这类行为压根测不到 ——
+所以凡是需要真 Modeler 的用例一律走 Vitest Browser Mode（Playwright + Chromium）。
+
+- `test/unit/` —— 纯函数与用假服务对象驱动的模块（csv、debounce、validate、注册表…）
+- `test/moddle/` —— 直接用 `bpmn-moddle` 做 XML 往返快照，不起画布，快
+- `test/browser/` —— 真实挂载 `<BpmnDesigner>`：撤销重做、只读拦截、面板写入、语言切换
+
+快照更新：`npm run test:unit -- -u`。本地跑 browser 套件会用系统 Chrome；
+CI 里由 `npx playwright install --with-deps chromium` 提供。
+
+## 贡献
+
+代码约定（与现有代码保持一致即可）：
+
+- `src/` 内统一用 `@/` 别名；组件一律 `<script setup lang="ts">` + `defineOptions({ name })`
+- 严格 TS（`noUnusedLocals` / `noUnusedParameters` / `verbatimModuleSyntax`）
+- **注释只写「为什么」**，不写「做了什么」——「是什么」交给命名
+- 样式只写在 `src/styles/index.scss`，不用 SFC 的 `<style>` 块
+- 面板 widget 持本地草稿、在 `@change`/失焦时提交，不绑 `@input`
+- 图元与 moddle 对象一律 `shallowRef` + `markRaw`，**绝不进深度响应式**
+- 所有写操作走 `modeling.updateProperties` / `updateModdleProperties`；
+  清空字段写 `undefined` 而不是 `''`
+
 ## 开发
 
 ```bash
@@ -181,6 +243,10 @@ npm run typecheck        # vue-tsc 类型检查
 npm run build            # lib + playground + standalone 全量构建
 npm run build:lib        # 仅构建 npm 库产物到 dist/
 ```
+
+playground 里有「载入示例」按钮，载入的是与单测快照同一份 fixture
+（`test/fixtures/approval-full.bpmn`），可当人工回归入口；
+`playground/DemoGroup.vue` 与 `UserPicker.vue` 分别演示自定义属性组与 resolver 接入。
 
 ### 构建产物
 

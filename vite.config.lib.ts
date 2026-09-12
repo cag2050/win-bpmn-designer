@@ -57,6 +57,9 @@ export default defineConfig({
         entryRoot: 'src',
         outDirs: 'dist/types',
         insertTypesEntry: true,
+        // 刻意不开 bundleTypes：api-extractor 合并时会把 vue-tsc 生成的 __VLS_* 内部
+        // 辅助类型的定义丢掉，产出的单文件里全是 TS2304 未定义名，比逐文件 emit 更糟。
+        // 逐文件 emit 的代价是消费方需用 bundler 解析（见 README 的兼容性说明）。
       }),
   ].filter(Boolean),
 

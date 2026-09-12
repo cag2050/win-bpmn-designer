@@ -21,9 +21,12 @@ function uniqueSuffix(): string {
  * 注意 bpmn-js 要求 BPMNDiagram / BPMNPlane 齐全，否则 importXML 会报 no diagram to display。
  */
 export function createEmptyDiagram(options: CreateProcessOptions = {}): string {
+  // 默认值刻意用英文：本函数不认识 locale，由 BpmnCanvas.createNew 传入按当前
+  // 语言翻好的名字。写死中文会让 en-US 下新建的流程也是中文。
   const {
     processId = `Process_${uniqueSuffix()}`,
-    processName = '新建流程',
+    processName = 'New process',
+    startEventName = 'Start',
     targetNamespace = FLOWABLE_TARGET_NAMESPACE,
   } = options
 
@@ -39,7 +42,7 @@ export function createEmptyDiagram(options: CreateProcessOptions = {}): string {
                   targetNamespace="${targetNamespace}"
                   exporter="win-bpmn-designer">
   <bpmn:process id="${processId}" name="${processName}" isExecutable="true">
-    <bpmn:startEvent id="StartEvent_1" name="开始" />
+    <bpmn:startEvent id="StartEvent_1" name="${startEventName}" />
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="${processId}">

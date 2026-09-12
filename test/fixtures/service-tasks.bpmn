@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:flowable="http://flowable.org/bpmn"
+                  id="Definitions_service"
+                  targetNamespace="http://www.flowable.org/processdef">
+  <bpmn:process id="serviceKinds" isExecutable="true">
+    <!-- 四种实现方式各一个，验证它们互不串味 -->
+    <bpmn:serviceTask id="byClass" flowable:class="com.acme.A" />
+    <bpmn:serviceTask id="byExpression" flowable:expression="${bean.run()}" />
+    <bpmn:serviceTask id="byDelegate" flowable:delegateExpression="${myDelegate}" />
+    <bpmn:serviceTask id="byType" flowable:type="http"
+                      flowable:resultVariable="resp"
+                      flowable:useLocalScopeForResultVariable="true">
+      <bpmn:extensionElements>
+        <flowable:field name="requestMethod" stringValue="GET" />
+        <flowable:field name="requestUrl">
+          <flowable:string>https://acme.com/api</flowable:string>
+        </flowable:field>
+      </bpmn:extensionElements>
+    </bpmn:serviceTask>
+
+    <bpmn:subProcess id="eventSub" triggeredByEvent="true">
+      <bpmn:startEvent id="innerStart">
+        <bpmn:signalEventDefinition id="SignalDef_1" signalRef="Signal_1" />
+      </bpmn:startEvent>
+    </bpmn:subProcess>
+  </bpmn:process>
+
+  <bpmn:signal id="Signal_1" name="cancelSignal" />
+</bpmn:definitions>

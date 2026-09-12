@@ -37,6 +37,7 @@
     "standalone/**/*.ts",
     "standalone/**/*.vue",
     "test/**/*.ts",
+    "test/**/*.d.ts",
     "vite.config.ts",
     "vite.config.*.ts"
   ]

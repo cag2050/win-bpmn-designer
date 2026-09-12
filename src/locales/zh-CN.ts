@@ -147,6 +147,8 @@ const zhCN: LocaleMessages = {
   'designer.panel.hint.timer': '如 PT1H（1 小时后）、R3/PT10M（每 10 分钟共 3 次）',
 
   // ── 校验 ──────────────────────────────────────
+  'designer.defaults.processName': '新建流程',
+  'designer.defaults.startEventName': '开始',
   'designer.toolbar.validate': '校验',
   'designer.validate.valid': '校验通过，未发现问题',
   'designer.validate.emptyProcess': '流程为空，至少需要一个节点',

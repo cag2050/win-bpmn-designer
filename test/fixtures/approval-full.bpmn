@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:flowable="http://flowable.org/bpmn"
+                  id="Definitions_approval"
+                  targetNamespace="http://www.flowable.org/processdef">
+  <bpmn:process id="approval" name="报销审批" isExecutable="true"
+                flowable:candidateStarterUsers="admin,manager"
+                flowable:candidateStarterGroups="finance">
+    <bpmn:startEvent id="StartEvent_1" name="提交">
+      <bpmn:extensionElements>
+        <flowable:formProperty id="amount" name="金额" type="long" variable="amount" required="true" />
+        <flowable:formProperty id="level" name="级别" type="enum">
+          <flowable:value id="low" name="普通" />
+          <flowable:value id="high" name="紧急" />
+        </flowable:formProperty>
+      </bpmn:extensionElements>
+      <bpmn:outgoing>Flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <bpmn:userTask id="review" name="主管审批"
+                   flowable:assignee="${initiator}"
+                   flowable:candidateGroups="hr,finance"
+                   flowable:dueDate="P1D"
+                   flowable:priority="50"
+                   flowable:formKey="reviewForm"
+                   flowable:async="true"
+                   flowable:exclusive="false"
+                   flowable:formFieldValidation="true">
+      <bpmn:extensionElements>
+        <flowable:taskListener event="create" class="com.acme.NotifyListener">
+          <flowable:field name="template" stringValue="review-created" />
+          <flowable:field name="target">
+            <flowable:expression>${initiator}</flowable:expression>
+          </flowable:field>
+        </flowable:taskListener>
+        <flowable:executionListener event="end" delegateExpression="${auditBean}" />
+        <flowable:failedJobRetryTimeCycle>R5/PT10M</flowable:failedJobRetryTimeCycle>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_2</bpmn:outgoing>
+      <bpmn:multiInstanceLoopCharacteristics isSequential="true"
+                                             flowable:collection="${reviewers}"
+                                             flowable:elementVariable="reviewer"
+                                             flowable:elementIndexVariable="idx">
+        <bpmn:loopCardinality>3</bpmn:loopCardinality>
+        <bpmn:completionCondition>${nrOfCompletedInstances >= 2}</bpmn:completionCondition>
+      </bpmn:multiInstanceLoopCharacteristics>
+    </bpmn:userTask>
+
+    <bpmn:boundaryEvent id="timeout" name="超时" cancelActivity="false" attachedToRef="review">
+      <bpmn:timerEventDefinition id="TimerDef_1">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT8H</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+
+    <bpmn:boundaryEvent id="failed" name="异常" attachedToRef="review">
+      <bpmn:errorEventDefinition id="ErrorDef_1" errorRef="Error_1" />
+    </bpmn:boundaryEvent>
+
+    <bpmn:exclusiveGateway id="gateway" name="金额判断" default="Flow_small">
+      <bpmn:incoming>Flow_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_big</bpmn:outgoing>
+      <bpmn:outgoing>Flow_small</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:serviceTask id="notify" name="发送通知"
+                      flowable:class="com.acme.MailDelegate"
+                      flowable:resultVariable="mailResult"
+                      flowable:triggerable="true">
+      <bpmn:extensionElements>
+        <flowable:field name="to" stringValue="boss@acme.com" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_big</bpmn:incoming>
+      <bpmn:outgoing>Flow_3</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:callActivity id="sub" name="子流程" calledElement="childProcess"
+                       flowable:inheritVariables="true"
+                       flowable:sameDeployment="true">
+      <bpmn:extensionElements>
+        <flowable:in source="amount" target="amount" />
+        <flowable:out source="result" target="childResult" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_small</bpmn:incoming>
+      <bpmn:outgoing>Flow_4</bpmn:outgoing>
+    </bpmn:callActivity>
+
+    <bpmn:endEvent id="EndEvent_1" name="结束">
+      <bpmn:incoming>Flow_3</bpmn:incoming>
+      <bpmn:incoming>Flow_4</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="review" />
+    <bpmn:sequenceFlow id="Flow_2" sourceRef="review" targetRef="gateway" />
+    <bpmn:sequenceFlow id="Flow_big" name="大额" sourceRef="gateway" targetRef="notify">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${amount &gt; 1000}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_small" name="小额" sourceRef="gateway" targetRef="sub" />
+    <bpmn:sequenceFlow id="Flow_3" sourceRef="notify" targetRef="EndEvent_1" />
+    <bpmn:sequenceFlow id="Flow_4" sourceRef="sub" targetRef="EndEvent_1" />
+  </bpmn:process>
+
+  <bpmn:error id="Error_1" name="审批异常" errorCode="REVIEW_ERR" />
+</bpmn:definitions>

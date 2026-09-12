@@ -1,5 +1,5 @@
 import type { ModuleDeclaration } from 'didi'
-import type { Component } from 'vue'
+import type { Component, Ref } from 'vue'
 
 import type Modeler from 'bpmn-js/lib/Modeler'
 
@@ -11,6 +11,11 @@ export interface BpmnElement {
   id: string
   type: string
   businessObject: ModdleElement
+  /** 外置标签会指回宿主图元；遍历 elementRegistry 做统计时要据此排除，否则同一节点会被数两次 */
+  labelTarget?: BpmnElement
+  incoming?: BpmnElement[]
+  outgoing?: BpmnElement[]
+  parent?: BpmnElement
   [key: string]: unknown
 }
 
@@ -21,6 +26,19 @@ export interface ModdleElement {
   name?: string
   $attrs?: Record<string, unknown>
   $parent?: ModdleElement
+  [key: string]: unknown
+}
+
+/**
+ * moddle 扩展描述符（如 core/moddle/flowable.json）。
+ * 刻意只约束顶层字段：types 里的结构由 moddle 自己校验，写太死反而挡住合法写法。
+ */
+export interface ModdleDescriptor {
+  name: string
+  uri: string
+  prefix: string
+  xml?: Record<string, unknown>
+  types: Record<string, unknown>[]
   [key: string]: unknown
 }
 
@@ -111,6 +129,12 @@ export interface SelectOption {
   value: string
 }
 
+/** 属性组组件收到的 props。自定义分组照这个签名写即可。 */
+export interface PropertyGroupProps {
+  element: BpmnElement
+  locale: LocaleName
+}
+
 /**
  * 属性面板的一个分组。
  * 业务方可注册新组，或用同一个 id 覆盖内置组的实现（见 registerPropertyGroup）。
@@ -129,7 +153,7 @@ export interface ModelerOptions {
   /** 追加的 diagram-js 模块 */
   additionalModules?: ModuleDeclaration[]
   /** 追加的 moddle 扩展（会与内置的 flowable 扩展合并） */
-  moddleExtensions?: Record<string, unknown>
+  moddleExtensions?: Record<string, ModdleDescriptor>
   /** palette 白名单，填内置条目 id（如 create.task、hand-tool）；不传则显示全部 */
   paletteItems?: string[]
   /** context-pad 白名单，填内置条目 id（如 append.end-event、connect、delete）；不传则显示全部 */
@@ -140,6 +164,7 @@ export interface ModelerOptions {
 export interface CreateProcessOptions {
   processId?: string
   processName?: string
+  startEventName?: string
   /** definitions 的 targetNamespace，默认 Flowable 引擎期望的值 */
   targetNamespace?: string
 }
@@ -156,6 +181,10 @@ export interface BpmnDesignerExpose {
   fitViewport: () => void
   /** 基础建模校验；无 error 时 valid 为 true */
   validate: () => ValidationResult
+  /** 导出当前流程并派发 save 事件 */
+  save: () => Promise<void>
+  /** 相对上次导入/保存是否有未提交的改动 */
+  dirty: Ref<boolean>
   /** 逃生舱：拿到原生 modeler，做本库未覆盖的操作 */
   getModeler: () => BpmnModeler | undefined
 }

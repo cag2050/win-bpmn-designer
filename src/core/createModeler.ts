@@ -6,10 +6,13 @@ import { PaletteFilterModule } from '@/core/modules/palette'
 import { createReadonlyModule } from '@/core/modules/readonly'
 import type { ReadonlyStore } from '@/core/modules/readonly'
 import { createTranslateModule } from '@/core/modules/translate'
-import type { BpmnModeler, LocaleStore, ModelerOptions } from '@/types'
+import type { BpmnModeler, LocaleStore, ModdleDescriptor, ModelerOptions } from '@/types'
 
-/** Flowable 命名空间的 moddle descriptor，业务方可取出与自己的扩展合并。 */
-export const FlowableModdleDescriptor = flowableModdle
+/**
+ * Flowable 命名空间的 moddle descriptor，业务方可取出与自己的扩展合并。
+ * 必须显式标注类型：否则 TS 会把整份 JSON 的字面量类型（2.5KB）推进 dist/types。
+ */
+export const FlowableModdleDescriptor: ModdleDescriptor = flowableModdle as ModdleDescriptor
 
 export interface CreateModelerParams extends ModelerOptions {
   /** 画布挂载容器，必须已在 DOM 中且有确定的宽高 */

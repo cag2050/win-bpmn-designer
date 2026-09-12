@@ -78,6 +78,7 @@ export {
 } from '@/helpers/element-utils'
 export { joinCsv, parseCsv } from '@/helpers/csv'
 export { debounce } from '@/helpers/debounce'
+export type { Debounced } from '@/helpers/debounce'
 export {
   addExtensionElement,
   createExtensionElement,
@@ -95,6 +96,7 @@ export {
 } from '@/helpers/xml-templates'
 
 export { DEFAULT_LOCALE, locales, translate } from '@/locales'
+export { interpolate } from '@/locales/interpolate'
 export { GLOBAL_OPTIONS_KEY } from '@/options'
 export type { WinBpmnDesignerOptions } from '@/options'
 export { install } from '@/install'

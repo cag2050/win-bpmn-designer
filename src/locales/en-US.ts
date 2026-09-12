@@ -136,6 +136,8 @@ const enUS: LocaleMessages = {
   'designer.panel.option.timer.timeCycle': 'Cycle (timeCycle)',
   'designer.panel.hint.timer': 'e.g. PT1H, or R3/PT10M for 3 repeats',
 
+  'designer.defaults.processName': 'New process',
+  'designer.defaults.startEventName': 'Start',
   'designer.toolbar.validate': 'Validate',
   'designer.validate.valid': 'No problems found',
   'designer.validate.emptyProcess': 'The process is empty; at least one element is required',
