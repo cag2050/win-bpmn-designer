@@ -1,28 +1,20 @@
 <script setup lang="ts">
-import { ElButton, ElDialog, ElMessage } from 'element-plus'
+import { ElButton, ElDialog, ElMessage, ElSwitch } from 'element-plus'
 import { ref, useTemplateRef } from 'vue'
 
 import BpmnDesigner from '@/components/BpmnDesigner.vue'
 import { version } from '@/index'
+import type { LocaleName } from '@/types'
 
 const designerRef = useTemplateRef<InstanceType<typeof BpmnDesigner>>('designer')
 
 const xmlVisible = ref(false)
 const xmlPreview = ref('')
+const locale = ref<LocaleName>('zh-CN')
 
 async function showXML(): Promise<void> {
   xmlPreview.value = (await designerRef.value?.exportXML()) ?? ''
   xmlVisible.value = true
-}
-
-async function download(): Promise<void> {
-  const xml = (await designerRef.value?.exportXML()) ?? ''
-  const url = URL.createObjectURL(new Blob([xml], { type: 'application/xml' }))
-  const a = document.createElement('a')
-  a.href = url
-  a.download = 'process.bpmn20.xml'
-  a.click()
-  URL.revokeObjectURL(url)
 }
 
 function onReady(): void {
@@ -36,16 +28,18 @@ function onReady(): void {
       <span class="pg-title">win-bpmn-designer</span>
       <span class="pg-version">v{{ version }}</span>
       <span class="pg-spacer" />
-      <ElButton size="small" @click="designerRef?.createNew()">新建</ElButton>
-      <ElButton size="small" @click="designerRef?.undo()">撤销</ElButton>
-      <ElButton size="small" @click="designerRef?.redo()">重做</ElButton>
-      <ElButton size="small" @click="designerRef?.fitViewport()">适应画布</ElButton>
+      <ElSwitch
+        v-model="locale"
+        active-value="en-US"
+        inactive-value="zh-CN"
+        active-text="EN"
+        inactive-text="中"
+      />
       <ElButton size="small" type="primary" @click="showXML">查看 XML</ElButton>
-      <ElButton size="small" @click="download">下载</ElButton>
     </header>
 
     <main class="pg-main">
-      <BpmnDesigner ref="designer" @ready="onReady" />
+      <BpmnDesigner ref="designer" :locale="locale" @ready="onReady" />
     </main>
 
     <ElDialog v-model="xmlVisible" title="流程 XML" width="72%">

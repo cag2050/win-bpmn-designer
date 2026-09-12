@@ -1,6 +1,10 @@
 <script setup lang="ts">
-import { ref, useTemplateRef } from 'vue'
+import { computed, inject, onBeforeUnmount, ref, shallowRef, useTemplateRef } from 'vue'
 
+import { provideModeler } from '@/composables/useModeler'
+import { debounce } from '@/helpers/debounce'
+import { GLOBAL_OPTIONS_KEY } from '@/options'
+import { DEFAULT_LOCALE } from '@/locales'
 import type {
   BpmnDesignerExpose,
   BpmnModeler,
@@ -11,6 +15,8 @@ import type {
 } from '@/types'
 
 import BpmnCanvas from './BpmnCanvas.vue'
+import BpmnToolbar from './Toolbar/index.vue'
+import { downloadFile } from './Toolbar/actions'
 
 defineOptions({ name: 'BpmnDesigner' })
 
@@ -21,7 +27,10 @@ const props = withDefaults(
     options?: ModelerOptions
     /** 只读预览模式（M4 实现：禁用 palette、context-pad 与拖拽） */
     readonly?: boolean
+    /** 不传则回落到 install() 的全局配置 */
     locale?: LocaleName
+    /** 是否渲染内置工具栏；传入 #toolbar slot 时本 prop 无效 */
+    toolbar?: boolean
     /** 业务集成扩展点（M4） */
     resolvers?: DesignerResolvers
   }>(),
@@ -29,7 +38,8 @@ const props = withDefaults(
     xml: undefined,
     options: undefined,
     readonly: false,
-    locale: 'zh-CN',
+    locale: undefined,
+    toolbar: true,
     resolvers: undefined,
   },
 )
@@ -44,6 +54,13 @@ const emit = defineEmits<{
 
 const canvasRef = useTemplateRef<InstanceType<typeof BpmnCanvas>>('canvas')
 
+// 工具栏是画布的兄弟节点，provide 只对后代生效，所以 modeler 必须由这一层提供
+const modeler = shallowRef<BpmnModeler | undefined>(undefined)
+provideModeler(modeler)
+
+const globalOptions = inject(GLOBAL_OPTIONS_KEY, undefined)
+const locale = computed(() => props.locale ?? globalOptions?.locale ?? DEFAULT_LOCALE)
+
 /** 相对上次导入/保存是否有未提交的改动 */
 const dirty = ref(false)
 
@@ -54,11 +71,14 @@ function requireCanvas(): NonNullable<typeof canvasRef.value> {
 }
 
 async function importXML(xml: string): Promise<void> {
+  // 取消在途的序列化，否则导入完成后旧 XML 会迟到并把 v-model 覆盖回去
+  syncXml.cancel()
   await requireCanvas().importXML(xml)
   dirty.value = false
 }
 
 async function createNew(options?: CreateProcessOptions): Promise<void> {
+  syncXml.cancel()
   await requireCanvas().createNew(options)
   dirty.value = false
 }
@@ -72,7 +92,7 @@ function exportSVG(): Promise<string> {
 }
 
 function getModeler(): BpmnModeler | undefined {
-  return canvasRef.value?.getModeler()
+  return modeler.value
 }
 
 function withService<T>(name: string): T | undefined {
@@ -104,15 +124,39 @@ async function save(): Promise<void> {
   emit('save', { xml, svg })
 }
 
-async function onChange(): Promise<void> {
+// 每次 commandStack 变更都全量序列化一遍并不便宜，拖动节点时会连续触发，故防抖。
+// generation 用来丢弃「序列化期间又发生了新改动」的过期结果。
+let generation = 0
+
+const syncXml = debounce(() => {
+  const current = ++generation
+  exportXML()
+    .then((xml) => {
+      if (current === generation) emit('update:xml', xml)
+    })
+    .catch((error: unknown) => emit('error', error))
+}, 300)
+
+function onChange(): void {
+  // 脏标记与 change 事件要立刻生效，只有序列化值得防抖
   dirty.value = true
   emit('change')
-  // v-model:xml 需要拿到最新内容；序列化不算便宜，M1 会在这里加防抖
-  try {
-    emit('update:xml', await exportXML())
-  } catch (error) {
-    emit('error', error)
-  }
+  syncXml()
+}
+
+onBeforeUnmount(() => syncXml.cancel())
+
+function onReady(instance: BpmnModeler): void {
+  modeler.value = instance
+  emit('ready', instance)
+}
+
+async function onExportXml(): Promise<void> {
+  downloadFile(await exportXML(), 'process.bpmn20.xml', 'application/xml')
+}
+
+async function onExportSvg(): Promise<void> {
+  downloadFile(await exportSVG(), 'process.svg', 'image/svg+xml')
 }
 
 defineExpose<BpmnDesignerExpose & { save: () => Promise<void>; dirty: typeof dirty }>({
@@ -131,16 +175,26 @@ defineExpose<BpmnDesignerExpose & { save: () => Promise<void>; dirty: typeof dir
 </script>
 
 <template>
-  <div class="win-bpmn-designer" :data-readonly="props.readonly" :data-locale="props.locale">
-    <!-- M1: Toolbar -->
-    <slot name="toolbar" :dirty="dirty" :save="save" />
+  <div class="win-bpmn-designer" :data-readonly="props.readonly" :data-locale="locale">
+    <!-- slot 的回退内容即默认工具栏：传入 #toolbar 时整条被替换 -->
+    <slot name="toolbar" :dirty="dirty" :save="save">
+      <BpmnToolbar
+        v-if="props.toolbar"
+        :locale="locale"
+        @new="createNew()"
+        @import="importXML"
+        @export-xml="onExportXml"
+        @export-svg="onExportSvg"
+      />
+    </slot>
 
     <div class="win-bpmn-designer__body">
       <BpmnCanvas
         ref="canvas"
         :xml="props.xml"
         :options="props.options"
-        @ready="(modeler: BpmnModeler) => emit('ready', modeler)"
+        :locale="locale"
+        @ready="onReady"
         @change="onChange"
         @error="(error: unknown) => emit('error', error)"
       />

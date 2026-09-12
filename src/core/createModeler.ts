@@ -1,26 +1,46 @@
 import Modeler from 'bpmn-js/lib/Modeler'
 
-import type { BpmnModeler, ModelerOptions } from '@/types'
+import { ContextPadFilterModule } from '@/core/modules/context-pad'
+import { PaletteFilterModule } from '@/core/modules/palette'
+import { createTranslateModule } from '@/core/modules/translate'
+import type { BpmnModeler, LocaleStore, ModelerOptions } from '@/types'
 
 export interface CreateModelerParams extends ModelerOptions {
   /** 画布挂载容器，必须已在 DOM 中且有确定的宽高 */
   container: HTMLElement
+  /** 词条容器，切换语言时改写它再触发 i18n.changed 即可 */
+  localeStore: LocaleStore
 }
 
 /**
  * Modeler 工厂。
  *
- * M1 起会在这里聚合自定义 palette / context-pad / renderer / translate 模块，
- * M2 起会合并内置的 Flowable moddle 扩展（core/moddle/flowable.json）。
- * 目前先保证「能起一个原生 modeler」，把构建与挂载链路打通。
+ * 自定义模块走 additionalModules：didi 后注册的同名 key 覆盖先注册的，
+ * 所以重新声明 `translate` 就能整体替换 diagram-js 的内置实现。
+ * paletteFilter / contextPadFilter 挂在 options 顶层，由 didi 的点号嵌套解析
+ * 以 `config.paletteFilter` 的形式注入给对应 provider。
  */
 export function createModeler(params: CreateModelerParams): BpmnModeler {
-  const { container, additionalModules = [], moddleExtensions = {} } = params
+  const {
+    container,
+    localeStore,
+    additionalModules = [],
+    moddleExtensions = {},
+    paletteItems,
+    contextPadItems,
+  } = params
 
   return new Modeler({
     container,
-    // TODO(M1): 追加自定义 palette / context-pad / renderer / translate
-    additionalModules: additionalModules as never[],
+    additionalModules: [
+      createTranslateModule(localeStore),
+      PaletteFilterModule,
+      ContextPadFilterModule,
+      // 用户模块放最后，可以覆盖本库的任何一个
+      ...additionalModules,
+    ],
+    paletteFilter: { items: paletteItems },
+    contextPadFilter: { items: contextPadItems },
     // TODO(M2): 合并内置 flowable moddle 扩展
     moddleExtensions: moddleExtensions as Record<string, never>,
   })

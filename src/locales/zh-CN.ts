@@ -1,11 +1,8 @@
 import type { LocaleMessages } from '@/types'
 
 /**
- * 词条表同时服务两处：
- * 1. diagram-js 的 translate 模块（key 为 diagram-js/bpmn-js 内置英文原文）
- * 2. 本库自己的工具栏与属性面板文案（key 以 `designer.` 开头）
- *
- * M1 起补齐 palette / context-pad 的英文原文映射。
+ * 本库自有文案（工具栏、属性面板）。
+ * bpmn-js / diagram-js 内置文案的汉化在 ./zh-CN.bpmn.ts，两张表在 index.ts 合并。
  */
 const zhCN: LocaleMessages = {
   'designer.toolbar.new': '新建',
@@ -17,6 +14,14 @@ const zhCN: LocaleMessages = {
   'designer.toolbar.zoomIn': '放大',
   'designer.toolbar.zoomOut': '缩小',
   'designer.toolbar.fit': '适应画布',
+  'designer.toolbar.alignLeft': '左对齐',
+  'designer.toolbar.alignCenter': '水平居中',
+  'designer.toolbar.alignRight': '右对齐',
+  'designer.toolbar.alignTop': '顶部对齐',
+  'designer.toolbar.alignMiddle': '垂直居中',
+  'designer.toolbar.alignBottom': '底部对齐',
+  'designer.toolbar.distributeHorizontally': '水平均匀分布',
+  'designer.toolbar.distributeVertically': '垂直均匀分布',
   'designer.panel.title': '属性配置',
   'designer.panel.empty': '请选择一个节点',
 }

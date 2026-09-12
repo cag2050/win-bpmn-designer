@@ -1,3 +1,5 @@
+import type { ModuleDeclaration } from 'didi'
+
 import type Modeler from 'bpmn-js/lib/Modeler'
 
 /** bpmn-js Modeler 实例。业务方可通过 `designerRef.getModeler()` 拿到，作为逃生舱使用。 */
@@ -27,6 +29,36 @@ export type LocaleName = 'zh-CN' | 'en-US'
 export type LocaleMessages = Record<string, string>
 
 /**
+ * 传给自定义 translate 模块的词条容器。
+ * 刻意用普通可变对象而非 ref：它会被 didi 持有并传进 bpmn-js 内部，
+ * 不能带上 Vue 的响应式 Proxy（见方案 §4.2）。切换语言时整体替换 messages 即可。
+ */
+export interface LocaleStore {
+  messages: LocaleMessages
+}
+
+/** palette 条目。`separator` 为 true 时是分隔符而非可点击按钮。 */
+export interface PaletteEntry {
+  group?: string
+  className?: string
+  title?: string
+  separator?: boolean
+  [key: string]: unknown
+}
+
+export type PaletteEntries = Record<string, PaletteEntry>
+
+/** context-pad 条目。 */
+export interface ContextPadEntry {
+  group?: string
+  className?: string
+  title?: string
+  [key: string]: unknown
+}
+
+export type ContextPadEntries = Record<string, ContextPadEntry>
+
+/**
  * 业务集成扩展点（M4）。
  * 未传时对应字段降级为普通输入框；传入时渲染宿主自己的选择器组件。
  */
@@ -46,11 +78,13 @@ export interface DesignerResolvers {
 /** 传给 bpmn-js Modeler 的透传配置。 */
 export interface ModelerOptions {
   /** 追加的 diagram-js 模块 */
-  additionalModules?: unknown[]
+  additionalModules?: ModuleDeclaration[]
   /** 追加的 moddle 扩展（会与内置的 flowable 扩展合并） */
   moddleExtensions?: Record<string, unknown>
-  /** 需要在 palette 中显示的节点类型，不传则显示全部 */
+  /** palette 白名单，填内置条目 id（如 create.task、hand-tool）；不传则显示全部 */
   paletteItems?: string[]
+  /** context-pad 白名单，填内置条目 id（如 append.end-event、connect、delete）；不传则显示全部 */
+  contextPadItems?: string[]
 }
 
 /** 新建空流程时的初始参数。 */

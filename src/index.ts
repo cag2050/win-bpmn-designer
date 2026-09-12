@@ -5,12 +5,30 @@ import '@/styles'
 
 import BpmnCanvas from '@/components/BpmnCanvas.vue'
 import BpmnDesigner from '@/components/BpmnDesigner.vue'
+import BpmnToolbar from '@/components/Toolbar/index.vue'
 
-export { BpmnCanvas, BpmnDesigner }
+export { BpmnCanvas, BpmnDesigner, BpmnToolbar }
+
+export {
+  alignElements,
+  distributeElements,
+  downloadFile,
+  fitViewport,
+  zoomBy,
+  zoomIn,
+  zoomOut,
+} from '@/components/Toolbar/actions'
+export type { Alignment, Distribution } from '@/components/Toolbar/actions'
 
 export { useModeler, provideModeler, MODELER_KEY } from '@/composables/useModeler'
+export { useCommandStack } from '@/composables/useCommandStack'
+export { useSelection } from '@/composables/useSelection'
 export { createModeler } from '@/core/createModeler'
 export type { CreateModelerParams } from '@/core/createModeler'
+
+export { ContextPadFilterModule } from '@/core/modules/context-pad'
+export { PaletteFilterModule } from '@/core/modules/palette'
+export { createTranslate, createTranslateModule } from '@/core/modules/translate'
 
 export {
   getBusinessObject,
@@ -18,6 +36,7 @@ export {
   is,
   isRoot,
 } from '@/helpers/element-utils'
+export { debounce } from '@/helpers/debounce'
 export {
   createEmptyDiagram,
   FLOWABLE_NAMESPACE,
@@ -26,9 +45,9 @@ export {
 } from '@/helpers/xml-templates'
 
 export { DEFAULT_LOCALE, locales, translate } from '@/locales'
-
-export { GLOBAL_OPTIONS_KEY, install } from '@/install'
-export type { WinBpmnDesignerOptions } from '@/install'
+export { GLOBAL_OPTIONS_KEY } from '@/options'
+export type { WinBpmnDesignerOptions } from '@/options'
+export { install } from '@/install'
 export { default } from '@/install'
 
 export type * from '@/types'

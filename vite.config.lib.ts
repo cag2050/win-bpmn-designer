@@ -23,6 +23,7 @@ const BPMN_EXTERNAL = [
   /^bpmn-js(\/.*)?$/,
   /^bpmn-moddle(\/.*)?$/,
   /^diagram-js(\/.*)?$/,
+  /^didi$/,
   /^min-dash$/,
   /^min-dom$/,
 ]

@@ -4,7 +4,14 @@ import { markRaw, onBeforeUnmount, onMounted, shallowRef, useTemplateRef, watch 
 import { provideModeler } from '@/composables/useModeler'
 import { createModeler } from '@/core/createModeler'
 import { createEmptyDiagram } from '@/helpers/xml-templates'
-import type { BpmnModeler, CreateProcessOptions, ModelerOptions } from '@/types'
+import { DEFAULT_LOCALE, locales } from '@/locales'
+import type {
+  BpmnModeler,
+  CreateProcessOptions,
+  LocaleName,
+  LocaleStore,
+  ModelerOptions,
+} from '@/types'
 
 defineOptions({ name: 'BpmnCanvas' })
 
@@ -13,8 +20,9 @@ const props = withDefaults(
     /** 初始 XML，不传则新建一份只含开始节点的空流程 */
     xml?: string
     options?: ModelerOptions
+    locale?: LocaleName
   }>(),
-  { xml: undefined, options: undefined },
+  { xml: undefined, options: undefined, locale: DEFAULT_LOCALE },
 )
 
 const emit = defineEmits<{
@@ -28,6 +36,9 @@ const containerRef = useTemplateRef<HTMLDivElement>('container')
 // markRaw + shallowRef：modeler 内部依赖对象引用相等判断，不能被响应式 Proxy 包裹
 const modeler = shallowRef<BpmnModeler | undefined>(undefined)
 provideModeler(modeler)
+
+// 普通可变对象，绝不能是 ref —— 它会被 didi 持有并传进 bpmn-js 内部
+const localeStore: LocaleStore = { messages: locales[props.locale] }
 
 async function importXML(xml: string): Promise<void> {
   const instance = modeler.value
@@ -67,6 +78,7 @@ onMounted(async () => {
 
   const instance = createModeler({
     container: containerRef.value,
+    localeStore,
     ...props.options,
   })
   modeler.value = markRaw(instance)
@@ -90,6 +102,17 @@ watch(
   () => props.xml,
   (next) => {
     if (next && modeler.value) void importXML(next)
+  },
+)
+
+// 切语言只换词条 + 通知重渲染，不重建 modeler —— 重建会清空撤销栈并丢掉当前图。
+// 直接往 eventBus 上抛 i18n.changed：bpmn-js 只注册了 translate，没有 i18n 服务，
+// 而 palette 本来就监听这个事件；context-pad 与替换菜单每次打开重新求值，无需额外处理。
+watch(
+  () => props.locale,
+  (next) => {
+    localeStore.messages = locales[next]
+    modeler.value?.get<{ fire: (e: string) => void }>('eventBus').fire('i18n.changed')
   },
 )
 

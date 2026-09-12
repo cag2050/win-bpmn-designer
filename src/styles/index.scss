@@ -39,6 +39,70 @@
   border-left: 1px solid var(--wbd-border-color);
 }
 
+.win-bpmn-toolbar {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 4px;
+  height: var(--wbd-toolbar-height);
+  padding: 0 8px;
+  border-bottom: 1px solid var(--wbd-border-color);
+}
+
+.win-bpmn-toolbar__group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+
+  // 组间用细分隔线，省掉额外的分隔符元素
+  & + & {
+    margin-left: 4px;
+    padding-left: 6px;
+    border-left: 1px solid var(--wbd-border-color);
+  }
+}
+
+.win-bpmn-toolbar__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  color: #606266;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  &:hover:not(:disabled) {
+    color: #409eff;
+    background-color: #ecf5ff;
+  }
+
+  &:disabled {
+    color: #c0c4cc;
+    cursor: not-allowed;
+  }
+}
+
+.win-bpmn-toolbar__zoom {
+  min-width: 44px;
+  color: #606266;
+  font-size: 12px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.win-bpmn-toolbar__file {
+  display: none;
+}
+
 // 去掉 bpmn.io 的水印占位，避免和工具栏重叠
 .win-bpmn-designer .bjs-powered-by {
   display: none;

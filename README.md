@@ -4,8 +4,9 @@
 
 完整技术方案见 [`doc/方案.md`](./doc/方案.md)。
 
-> 当前进度：**M0 已完成**（TS 化脚手架、三套构建配置、目录骨架）。
-> 画布已能起来并导出合法 BPMN XML，属性面板与 Flowable 扩展在 M1 / M2 落地。
+> 当前进度：**M1 已完成**（TS 化脚手架、三套构建配置、Modeler 封装、内置工具栏、
+> palette / context-pad / 替换菜单汉化）。
+> 画布能画图并导出合法 BPMN XML，属性面板与 Flowable 扩展在 M2 落地。
 
 ## 安装
 
@@ -63,6 +64,18 @@ async function submit() {
 | `zoom(step)` / `fitViewport()` | 缩放 / 适应画布 |
 | `save()` | 导出并派发 `save` 事件 |
 | `getModeler()` | 逃生舱：拿到原生 bpmn-js Modeler |
+
+### 组件 props
+
+| prop | 默认 | 说明 |
+| --- | --- | --- |
+| `v-model:xml` | — | 流程 XML，内容变更后 300ms 防抖回写 |
+| `locale` | 取全局配置 | `zh-CN` / `en-US`，支持运行时切换 |
+| `toolbar` | `true` | 是否渲染内置工具栏；传入 `#toolbar` slot 时整条替换 |
+| `options.paletteItems` | 全部显示 | palette 白名单，填内置条目 id（如 `create.task`） |
+| `options.contextPadItems` | 全部显示 | context-pad 白名单（如 `append.end-event`、`connect`） |
+
+内置工具栏含：新建、导入、导出 XML / SVG、撤销 / 重做、缩放与适应画布、6 种对齐与 2 种均匀分布。
 
 ### iframe 集成（非 Vue 宿主）
 

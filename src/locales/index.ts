@@ -2,9 +2,16 @@ import type { LocaleMessages, LocaleName } from '@/types'
 
 import enUS from './en-US'
 import zhCN from './zh-CN'
+import zhCNBpmn from './zh-CN.bpmn'
 
+/**
+ * bpmn-js 内置文案与本库自有文案合并成一张扁平表：
+ * diagram-js 的 translate 只有 `translate(原文)` 一种查法，做不了命名空间。
+ * 源文件拆开只是为了让上百条英文原文 key 不淹没 `designer.*`。
+ * 英文无需翻译 —— 英文原文本身就是 key。
+ */
 export const locales: Record<LocaleName, LocaleMessages> = {
-  'zh-CN': zhCN,
+  'zh-CN': { ...zhCNBpmn, ...zhCN },
   'en-US': enUS,
 }
 
@@ -15,4 +22,4 @@ export function translate(locale: LocaleName, key: string): string {
   return locales[locale]?.[key] ?? key
 }
 
-export { enUS, zhCN }
+export { enUS, zhCN, zhCNBpmn }
