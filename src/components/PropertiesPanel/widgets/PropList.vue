@@ -2,6 +2,9 @@
 import { ElOption, ElSelect } from 'element-plus'
 import { computed, ref, watch } from 'vue'
 
+import { useReadonly } from '@/composables/useReadonly'
+import { joinCsv, parseCsv } from '@/helpers/csv'
+
 defineOptions({ name: 'PropList' })
 
 const props = withDefaults(
@@ -11,21 +14,16 @@ const props = withDefaults(
 
 const emit = defineEmits<{ 'update:modelValue': [value: string | undefined] }>()
 
-function parse(value?: string): string[] {
-  return (value ?? '')
-    .split(',')
-    .map((item) => item.trim())
-    .filter(Boolean)
-}
+const readonly = useReadonly()
 
 // Flowable 的 candidateUsers / candidateGroups 在 XML 里是逗号分隔的单个字符串，
-// 这里用多选 tag 呈现，提交时再拼回去。
-const items = ref<string[]>(parse(props.modelValue))
+// 这里用多选 tag 呈现，提交时再拼回去（拆拼见 helpers/csv.ts）。
+const items = ref<string[]>(parseCsv(props.modelValue))
 
 watch(
   () => props.modelValue,
   (next) => {
-    items.value = parse(next)
+    items.value = parseCsv(next)
   },
 )
 
@@ -34,9 +32,7 @@ watch(
 const options = computed(() => items.value)
 
 function onChange(value: unknown): void {
-  const next = (value as string[]).map((item) => item.trim()).filter(Boolean)
-  const joined = next.join(',')
-  emit('update:modelValue', joined === '' ? undefined : joined)
+  emit('update:modelValue', joinCsv(value as string[]))
 }
 </script>
 
@@ -51,6 +47,7 @@ function onChange(value: unknown): void {
       default-first-option
       :reserve-keyword="false"
       :placeholder="props.placeholder"
+      :disabled="readonly"
       size="small"
       @change="onChange"
     >

@@ -7,6 +7,7 @@ import { translate } from '@/locales'
 import type { BpmnElement, LocaleName, ModdleElement } from '@/types'
 
 import PropSelect from '../widgets/PropSelect.vue'
+import PropResolver from '../widgets/PropResolver.vue'
 import PropText from '../widgets/PropText.vue'
 
 defineOptions({ name: 'MultiInstanceGroup' })
@@ -133,8 +134,10 @@ function setExpression(key: string, value: string | undefined): void {
     />
 
     <template v-if="kind">
-      <PropText
+      <PropResolver
         :label="t('designer.panel.collectionExpression')"
+        name="expressionEditor"
+        :element="props.element"
         :placeholder="t('designer.panel.placeholder.expression')"
         :model-value="collection"
         @update:model-value="collection = $event"
@@ -154,8 +157,10 @@ function setExpression(key: string, value: string | undefined): void {
         :model-value="expressionBody('loopCardinality')"
         @update:model-value="setExpression('loopCardinality', $event)"
       />
-      <PropText
+      <PropResolver
         :label="t('designer.panel.completionCondition')"
+        name="expressionEditor"
+        :element="props.element"
         :placeholder="t('designer.panel.placeholder.expression')"
         :model-value="expressionBody('completionCondition')"
         @update:model-value="setExpression('completionCondition', $event)"

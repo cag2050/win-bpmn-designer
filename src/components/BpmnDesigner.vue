@@ -1,17 +1,22 @@
 <script setup lang="ts">
-import { computed, inject, onBeforeUnmount, ref, shallowRef, useTemplateRef } from 'vue'
+import { computed, inject, onBeforeUnmount, ref, shallowRef, useSlots, useTemplateRef } from 'vue'
 
 import { provideModeler } from '@/composables/useModeler'
+import { provideReadonly } from '@/composables/useReadonly'
+import { provideResolvers } from '@/composables/useResolvers'
+import { validateDiagram } from '@/core/validate'
 import { debounce } from '@/helpers/debounce'
 import { GLOBAL_OPTIONS_KEY } from '@/options'
 import { DEFAULT_LOCALE } from '@/locales'
 import type {
   BpmnDesignerExpose,
+  BpmnElement,
   BpmnModeler,
   CreateProcessOptions,
   DesignerResolvers,
   LocaleName,
   ModelerOptions,
+  ValidationResult,
 } from '@/types'
 
 import BpmnCanvas from './BpmnCanvas.vue'
@@ -26,7 +31,7 @@ const props = withDefaults(
     /** 流程 XML，支持 v-model:xml */
     xml?: string
     options?: ModelerOptions
-    /** 只读预览模式（M4 实现：禁用 palette、context-pad 与拖拽） */
+    /** 只读预览模式：可平移缩放选中，但改不动；palette 与 context-pad 隐藏 */
     readonly?: boolean
     /** 不传则回落到 install() 的全局配置 */
     locale?: LocaleName
@@ -34,7 +39,7 @@ const props = withDefaults(
     toolbar?: boolean
     /** 是否渲染内置属性面板；传入 #panel slot 时本 prop 无效 */
     panel?: boolean
-    /** 业务集成扩展点（M4） */
+    /** 业务集成扩展点：传入宿主自己的选人/表单/表达式组件 */
     resolvers?: DesignerResolvers
   }>(),
   {
@@ -54,6 +59,7 @@ const emit = defineEmits<{
   change: []
   error: [error: unknown]
   save: [payload: { xml: string; svg: string }]
+  'element-select': [payload: { element?: BpmnElement; elements: BpmnElement[] }]
 }>()
 
 const canvasRef = useTemplateRef<InstanceType<typeof BpmnCanvas>>('canvas')
@@ -64,6 +70,17 @@ provideModeler(modeler)
 
 const globalOptions = inject(GLOBAL_OPTIONS_KEY, undefined)
 const locale = computed(() => props.locale ?? globalOptions?.locale ?? DEFAULT_LOCALE)
+
+provideReadonly(computed(() => props.readonly))
+
+// 全局 install() 里的 resolvers 作为默认值，单个实例的 prop 可覆盖同名项
+provideResolvers(computed(() => ({ ...globalOptions?.resolvers, ...props.resolvers })))
+
+// 只转发宿主真的传了的 slot：直接无条件写 <slot> 会让空插槽吃掉内置回退内容
+const slots = useSlots()
+const forwardedPanelSlots = computed(() =>
+  Object.keys(slots).filter((name) => name === 'panel-header' || name.startsWith('group-')),
+)
 
 /** 相对上次导入/保存是否有未提交的改动 */
 const dirty = ref(false)
@@ -121,6 +138,17 @@ function fitViewport(): void {
   withService<{ zoom: (v: string) => void }>('canvas')?.zoom('fit-viewport')
 }
 
+function validate(): ValidationResult {
+  const instance = modeler.value
+  if (!instance) return { valid: false, issues: [] }
+
+  return validateDiagram(instance, locale.value)
+}
+
+function onSelect(elements: BpmnElement[]): void {
+  emit('element-select', { element: elements.length === 1 ? elements[0] : undefined, elements })
+}
+
 /** 导出当前流程并派发 save 事件，供工具栏的「保存」按钮调用 */
 async function save(): Promise<void> {
   const [xml, svg] = await Promise.all([exportXML(), exportSVG()])
@@ -172,6 +200,7 @@ defineExpose<BpmnDesignerExpose & { save: () => Promise<void>; dirty: typeof dir
   redo,
   zoom,
   fitViewport,
+  validate,
   getModeler,
   save,
   dirty,
@@ -198,15 +227,26 @@ defineExpose<BpmnDesignerExpose & { save: () => Promise<void>; dirty: typeof dir
         :xml="props.xml"
         :options="props.options"
         :locale="locale"
+        :readonly="props.readonly"
         @ready="onReady"
         @change="onChange"
+        @select="onSelect"
         @error="(error: unknown) => emit('error', error)"
       />
 
       <!-- slot 的回退内容即默认面板：传入 #panel 时整块被替换 -->
       <div v-if="props.panel || $slots.panel" class="win-bpmn-designer__panel">
         <slot name="panel">
-          <BpmnPropertiesPanel :locale="locale" />
+          <BpmnPropertiesPanel :locale="locale">
+            <!-- 把宿主传进来的 panel-header / group-* 继续往下转发 -->
+            <template
+              v-for="name in forwardedPanelSlots"
+              #[name]="slotProps"
+              :key="name"
+            >
+              <slot :name="name" v-bind="slotProps" />
+            </template>
+          </BpmnPropertiesPanel>
         </slot>
       </div>
     </div>

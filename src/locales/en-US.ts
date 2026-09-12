@@ -135,6 +135,15 @@ const enUS: LocaleMessages = {
   'designer.panel.option.timer.timeDuration': 'Duration (timeDuration)',
   'designer.panel.option.timer.timeCycle': 'Cycle (timeCycle)',
   'designer.panel.hint.timer': 'e.g. PT1H, or R3/PT10M for 3 repeats',
+
+  'designer.toolbar.validate': 'Validate',
+  'designer.validate.valid': 'No problems found',
+  'designer.validate.emptyProcess': 'The process is empty; at least one element is required',
+  'designer.validate.missingStartEvent': 'Missing a start event',
+  'designer.validate.missingEndEvent': 'Missing an end event',
+  'designer.validate.orphanNode': '"{name}" has no connections',
+  'designer.validate.gatewayMissingCondition':
+    'Gateway "{name}" has outgoing flows without a condition that are not the default flow',
 }
 
 export default enUS

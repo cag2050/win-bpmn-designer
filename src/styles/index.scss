@@ -259,3 +259,17 @@
 .win-bpmn-designer .bjs-powered-by {
   display: none;
 }
+
+// 只读模式。编辑能力由 core/modules/readonly 的守卫拦住，这里只管视觉残留：
+// palette 被清空后仍会画出一个空的带边框方块；resize 手柄与 bendpoint 是在
+// selection.changed 时才重建的，切到只读时当前选中元素上会残留一批。
+.win-bpmn-designer[data-readonly='true'] {
+  .djs-palette,
+  .djs-context-pad,
+  .djs-resizer,
+  .djs-bendpoint,
+  .djs-segment-dragger,
+  .djs-drag-handle {
+    display: none !important;
+  }
+}

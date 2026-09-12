@@ -17,9 +17,18 @@ export const locales: Record<LocaleName, LocaleMessages> = {
 
 export const DEFAULT_LOCALE: LocaleName = 'zh-CN'
 
-/** 取词条；缺失时回落到 key 本身，符合 diagram-js translate 的约定。 */
-export function translate(locale: LocaleName, key: string): string {
-  return locales[locale]?.[key] ?? key
+/**
+ * 取词条；缺失时回落到 key 本身，符合 diagram-js translate 的约定。
+ * replacements 用于填 `{id}` 这类占位符（校验提示要用）。
+ */
+export function translate(
+  locale: LocaleName,
+  key: string,
+  replacements?: Record<string, string>,
+): string {
+  const template = locales[locale]?.[key] ?? key
+
+  return template.replace(/{([^}]+)}/g, (_, name: string) => replacements?.[name] ?? `{${name}}`)
 }
 
 export { enUS, zhCN, zhCNBpmn }

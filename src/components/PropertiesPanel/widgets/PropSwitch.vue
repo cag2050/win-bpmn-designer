@@ -2,6 +2,8 @@
 import { ElSwitch } from 'element-plus'
 import { computed } from 'vue'
 
+import { useReadonly } from '@/composables/useReadonly'
+
 defineOptions({ name: 'PropSwitch' })
 
 const props = withDefaults(
@@ -19,6 +21,8 @@ const props = withDefaults(
   { modelValue: undefined, hint: undefined, defaultValue: false },
 )
 
+const readonly = useReadonly()
+
 const emit = defineEmits<{ 'update:modelValue': [value: boolean | undefined] }>()
 
 const checked = computed(() => props.modelValue ?? props.defaultValue)
@@ -32,7 +36,7 @@ function onChange(value: boolean | string | number): void {
 <template>
   <div class="win-bpmn-panel__row win-bpmn-panel__row--inline">
     <label class="win-bpmn-panel__label">{{ props.label }}</label>
-    <ElSwitch :model-value="checked" size="small" @change="onChange" />
+    <ElSwitch :model-value="checked" :disabled="readonly" size="small" @change="onChange" />
     <p v-if="props.hint" class="win-bpmn-panel__hint">{{ props.hint }}</p>
   </div>
 </template>

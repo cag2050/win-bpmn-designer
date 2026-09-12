@@ -31,6 +31,7 @@ export { default as TaskListenerGroup } from '@/components/PropertiesPanel/group
 export { default as UserTaskGroup } from '@/components/PropertiesPanel/groups/UserTaskGroup.vue'
 export { default as PropCollection } from '@/components/PropertiesPanel/widgets/PropCollection.vue'
 export { default as PropList } from '@/components/PropertiesPanel/widgets/PropList.vue'
+export { default as PropResolver } from '@/components/PropertiesPanel/widgets/PropResolver.vue'
 export { default as PropSelect } from '@/components/PropertiesPanel/widgets/PropSelect.vue'
 export { default as PropSwitch } from '@/components/PropertiesPanel/widgets/PropSwitch.vue'
 export { default as PropText } from '@/components/PropertiesPanel/widgets/PropText.vue'
@@ -52,6 +53,8 @@ export { useElementProps, useProperty } from '@/composables/useElementProps'
 export type { ElementProps } from '@/composables/useElementProps'
 export { useExtensionCollection, useModdleCollection } from '@/composables/useExtensionCollection'
 export type { ModdleCollection } from '@/composables/useExtensionCollection'
+export { useReadonly, READONLY_KEY } from '@/composables/useReadonly'
+export { useResolver, useResolvers, RESOLVERS_KEY } from '@/composables/useResolvers'
 export { useSelection } from '@/composables/useSelection'
 export { createModeler, FlowableModdleDescriptor } from '@/core/createModeler'
 export type { CreateModelerParams } from '@/core/createModeler'
@@ -59,6 +62,13 @@ export type { CreateModelerParams } from '@/core/createModeler'
 export { ContextPadFilterModule } from '@/core/modules/context-pad'
 export { PaletteFilterModule } from '@/core/modules/palette'
 export { createTranslate, createTranslateModule } from '@/core/modules/translate'
+export {
+  createReadonlyModule,
+  resolveReadonlyStore,
+  setModelerReadonly,
+} from '@/core/modules/readonly'
+export type { ReadonlyStore } from '@/core/modules/readonly'
+export { validateDiagram } from '@/core/validate'
 
 export {
   getBusinessObject,
@@ -66,6 +76,7 @@ export {
   is,
   isRoot,
 } from '@/helpers/element-utils'
+export { joinCsv, parseCsv } from '@/helpers/csv'
 export { debounce } from '@/helpers/debounce'
 export {
   addExtensionElement,

@@ -60,20 +60,49 @@ export interface ContextPadEntry {
 export type ContextPadEntries = Record<string, ContextPadEntry>
 
 /**
- * 业务集成扩展点（M4）。
+ * 业务集成扩展点。
  * 未传时对应字段降级为普通输入框；传入时渲染宿主自己的选择器组件。
  */
-export interface DesignerResolvers {
-  /** 办理人 / 候选人选择器 */
-  userPicker?: unknown
-  /** 候选组（角色、部门）选择器 */
-  groupPicker?: unknown
-  /** 表单 key 选择器 */
-  formPicker?: unknown
-  /** 表达式编辑器 */
-  expressionEditor?: unknown
-  /** Java 类 / delegate 选择器 */
-  classPicker?: unknown
+export type DesignerResolverName =
+  | 'userPicker'
+  | 'groupPicker'
+  | 'formPicker'
+  | 'expressionEditor'
+  | 'classPicker'
+
+/**
+ * resolver 组件收到的 props。
+ * multiple 为真时 modelValue 是 string[]，否则是 string —— 逗号串的拆拼由库内完成，
+ * 宿主不必关心 Flowable 的逗号语义。
+ */
+export interface DesignerResolverProps {
+  modelValue?: string | string[]
+  multiple?: boolean
+  label?: string
+  disabled?: boolean
+  /** 当前所属图元，宿主可据此做上下文相关的取值 */
+  element?: BpmnElement
+}
+
+/** 故意放宽成 Component：宿主组件的 props 类型五花八门，卡太死只会制造摩擦。 */
+export type DesignerResolver = Component
+
+export type DesignerResolvers = Partial<Record<DesignerResolverName, DesignerResolver>>
+
+export type ValidationSeverity = 'error' | 'warning'
+
+export interface ValidationIssue {
+  code: string
+  severity: ValidationSeverity
+  message: string
+  elementId?: string
+  elementName?: string
+}
+
+export interface ValidationResult {
+  /** 无 error 即为 true；warning 不影响它 */
+  valid: boolean
+  issues: ValidationIssue[]
 }
 
 /** 下拉选项。 */
@@ -125,6 +154,8 @@ export interface BpmnDesignerExpose {
   redo: () => void
   zoom: (step: number) => void
   fitViewport: () => void
+  /** 基础建模校验；无 error 时 valid 为 true */
+  validate: () => ValidationResult
   /** 逃生舱：拿到原生 modeler，做本库未覆盖的操作 */
   getModeler: () => BpmnModeler | undefined
 }

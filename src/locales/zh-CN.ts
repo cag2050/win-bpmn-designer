@@ -145,6 +145,15 @@ const zhCN: LocaleMessages = {
   'designer.panel.option.timer.timeDuration': '持续时长（timeDuration）',
   'designer.panel.option.timer.timeCycle': '循环周期（timeCycle）',
   'designer.panel.hint.timer': '如 PT1H（1 小时后）、R3/PT10M（每 10 分钟共 3 次）',
+
+  // ── 校验 ──────────────────────────────────────
+  'designer.toolbar.validate': '校验',
+  'designer.validate.valid': '校验通过，未发现问题',
+  'designer.validate.emptyProcess': '流程为空，至少需要一个节点',
+  'designer.validate.missingStartEvent': '缺少开始事件',
+  'designer.validate.missingEndEvent': '缺少结束事件',
+  'designer.validate.orphanNode': '「{name}」没有连线，流程无法流转到该节点或从其继续',
+  'designer.validate.gatewayMissingCondition': '网关「{name}」存在未设置条件且非默认流的出线',
 }
 
 export default zhCN

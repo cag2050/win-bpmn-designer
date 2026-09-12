@@ -1,3 +1,7 @@
+import type { Injector } from 'didi'
+
+import { resolveReadonlyStore } from '@/core/modules/readonly'
+import type { ReadonlyStore } from '@/core/modules/readonly'
 import type { PaletteEntries } from '@/types'
 
 /**
@@ -42,17 +46,22 @@ function dropDanglingSeparators(entries: PaletteEntries): PaletteEntries {
  * 返回**函数**时会被当成 updater 调用，入参是已累积的条目（见 Palette.js 的 addPaletteEntries）。
  */
 export default class PaletteFilterProvider {
-  static $inject = ['palette', 'config.paletteFilter']
+  static $inject = ['palette', 'injector', 'config.paletteFilter']
 
   private readonly items?: string[]
+  private readonly readonlyStore?: ReadonlyStore
 
-  constructor(palette: Palette, config?: PaletteFilterConfig) {
+  constructor(palette: Palette, injector: Injector, config?: PaletteFilterConfig) {
     this.items = config?.items
+    this.readonlyStore = resolveReadonlyStore(injector)
     palette.registerProvider(FILTER_PRIORITY, this)
   }
 
   getPaletteEntries(): (entries: PaletteEntries) => PaletteEntries {
     return (entries) => {
+      // 只读下整条清空。palette 靠 i18n.changed 重渲染，见 setModelerReadonly
+      if (this.readonlyStore?.readonly) return {}
+
       const { items } = this
       // 默认不裁剪，保留 bpmn-js 的全部内置条目
       if (!items?.length) return entries

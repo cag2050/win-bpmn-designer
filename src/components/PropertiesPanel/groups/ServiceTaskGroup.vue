@@ -5,6 +5,7 @@ import { useElementProps, useProperty } from '@/composables/useElementProps'
 import { translate } from '@/locales'
 import type { BpmnElement, LocaleName } from '@/types'
 
+import PropResolver from '../widgets/PropResolver.vue'
 import PropSelect from '../widgets/PropSelect.vue'
 import PropSwitch from '../widgets/PropSwitch.vue'
 import PropText from '../widgets/PropText.vue'
@@ -48,6 +49,16 @@ const implKey = computed<string>(() => {
 
 const implValue = computed<string | undefined>(() => bag.get<string>(implKey.value))
 
+/**
+ * 类/委托表达式交给 classPicker，普通表达式交给 expressionEditor。
+ * 必须自带 revision 依赖：上游 implKey 读的是 moddle，返回的又是同一个引用，
+ * 不这样写变更传不到这里（M3 已经踩过一次链式 computed 的坑）。
+ */
+const implResolver = computed<'classPicker' | 'expressionEditor'>(() => {
+  void bag.revision.value
+  return implKey.value === 'expression' ? 'expressionEditor' : 'classPicker'
+})
+
 /** 切换实现方式：把另外三个键清掉，一次写完合成一条撤销记录 */
 function setImplKind(next: string | undefined): void {
   if (!next) return
@@ -84,9 +95,11 @@ const useLocalScope = useProperty<boolean>(bag, 'useLocalScopeForResultVariable'
       :model-value="implValue"
       @update:model-value="bag.set('type', $event)"
     />
-    <PropText
+    <PropResolver
       v-else
       :label="t('designer.panel.implementationValue')"
+      :name="implResolver"
+      :element="props.element"
       :model-value="implValue"
       @update:model-value="bag.set(implKey, $event)"
     />
@@ -96,8 +109,10 @@ const useLocalScope = useProperty<boolean>(bag, 'useLocalScopeForResultVariable'
       :model-value="resultVariable"
       @update:model-value="resultVariable = $event"
     />
-    <PropText
+    <PropResolver
       :label="t('designer.panel.skipExpression')"
+      name="expressionEditor"
+      :element="props.element"
       :placeholder="t('designer.panel.placeholder.expression')"
       :model-value="skipExpression"
       @update:model-value="skipExpression = $event"

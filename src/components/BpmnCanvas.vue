@@ -3,9 +3,12 @@ import { markRaw, onBeforeUnmount, onMounted, shallowRef, useTemplateRef, watch 
 
 import { provideModeler } from '@/composables/useModeler'
 import { createModeler } from '@/core/createModeler'
+import { setModelerReadonly } from '@/core/modules/readonly'
+import type { ReadonlyStore } from '@/core/modules/readonly'
 import { createEmptyDiagram } from '@/helpers/xml-templates'
 import { DEFAULT_LOCALE, locales } from '@/locales'
 import type {
+  BpmnElement,
   BpmnModeler,
   CreateProcessOptions,
   LocaleName,
@@ -21,14 +24,16 @@ const props = withDefaults(
     xml?: string
     options?: ModelerOptions
     locale?: LocaleName
+    readonly?: boolean
   }>(),
-  { xml: undefined, options: undefined, locale: DEFAULT_LOCALE },
+  { xml: undefined, options: undefined, locale: DEFAULT_LOCALE, readonly: false },
 )
 
 const emit = defineEmits<{
   ready: [modeler: BpmnModeler]
   change: []
   error: [error: unknown]
+  select: [elements: BpmnElement[]]
 }>()
 
 const containerRef = useTemplateRef<HTMLDivElement>('container')
@@ -37,8 +42,9 @@ const containerRef = useTemplateRef<HTMLDivElement>('container')
 const modeler = shallowRef<BpmnModeler | undefined>(undefined)
 provideModeler(modeler)
 
-// 普通可变对象，绝不能是 ref —— 它会被 didi 持有并传进 bpmn-js 内部
+// 两个 store 都是普通可变对象，绝不能是 ref —— 它们会被 didi 持有并传进 bpmn-js 内部
 const localeStore: LocaleStore = { messages: locales[props.locale] }
+const readonlyStore: ReadonlyStore = { readonly: props.readonly }
 
 async function importXML(xml: string): Promise<void> {
   const instance = modeler.value
@@ -79,13 +85,23 @@ onMounted(async () => {
   const instance = createModeler({
     container: containerRef.value,
     localeStore,
+    readonlyStore,
     ...props.options,
   })
   modeler.value = markRaw(instance)
 
+  const eventBus = instance.get<{
+    on: (e: string, cb: (event: { newSelection: BpmnElement[] }) => void) => void
+  }>('eventBus')
+
   // 所有变更都经过 commandStack，监听它即可覆盖增删改与撤销重做
-  instance.get<{ on: (e: string, cb: () => void) => void }>('eventBus').on('commandStack.changed', () => {
+  eventBus.on('commandStack.changed', () => {
     emit('change')
+  })
+
+  // markRaw 后再抛给外部，避免宿主把图元塞进 reactive() 造成引用相等判断失效
+  eventBus.on('selection.changed', (event) => {
+    emit('select', event.newSelection.map((element) => markRaw(element)))
   })
 
   await (props.xml ? importXML(props.xml) : createNew())
@@ -113,6 +129,15 @@ watch(
   (next) => {
     localeStore.messages = locales[next]
     modeler.value?.get<{ fire: (e: string) => void }>('eventBus').fire('i18n.changed')
+  },
+)
+
+// 切只读同样不重建 modeler：守卫读的是 readonlyStore 这个可变对象，翻标志即生效
+watch(
+  () => props.readonly,
+  (next) => {
+    const instance = modeler.value
+    if (instance) setModelerReadonly(instance, readonlyStore, next)
   },
 )
 

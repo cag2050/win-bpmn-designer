@@ -5,7 +5,7 @@ import { useElementProps, useProperty } from '@/composables/useElementProps'
 import { translate } from '@/locales'
 import type { BpmnElement, LocaleName } from '@/types'
 
-import PropList from '../widgets/PropList.vue'
+import PropResolver from '../widgets/PropResolver.vue'
 import PropSwitch from '../widgets/PropSwitch.vue'
 import PropText from '../widgets/PropText.vue'
 
@@ -39,14 +39,20 @@ const candidateStarterGroups = useProperty<string>(bag, 'candidateStarterGroups'
       :default-value="true"
       @update:model-value="isExecutable = $event"
     />
-    <PropList
+    <PropResolver
       :label="t('designer.panel.candidateStarterUsers')"
+      name="userPicker"
+      :element="props.element"
+      multiple
       :hint="t('designer.panel.hint.commaSeparated')"
       :model-value="candidateStarterUsers"
       @update:model-value="candidateStarterUsers = $event"
     />
-    <PropList
+    <PropResolver
       :label="t('designer.panel.candidateStarterGroups')"
+      name="groupPicker"
+      :element="props.element"
+      multiple
       :hint="t('designer.panel.hint.commaSeparated')"
       :model-value="candidateStarterGroups"
       @update:model-value="candidateStarterGroups = $event"

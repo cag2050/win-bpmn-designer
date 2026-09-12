@@ -2,6 +2,8 @@
 import { ElInput } from 'element-plus'
 import { ref, watch } from 'vue'
 
+import { useReadonly } from '@/composables/useReadonly'
+
 defineOptions({ name: 'PropText' })
 
 const props = withDefaults(
@@ -17,6 +19,8 @@ const props = withDefaults(
 )
 
 const emit = defineEmits<{ 'update:modelValue': [value: string | undefined] }>()
+
+const readonly = useReadonly()
 
 // 本地镜像：只在失焦/回车时提交。绑 @input 会让每个按键都进撤销栈，
 // 且 element.changed 回读会把正在输入的内容冲掉。
@@ -44,6 +48,7 @@ function commit(): void {
       :type="props.type"
       :rows="props.rows"
       :placeholder="props.placeholder"
+      :disabled="readonly"
       size="small"
       @change="commit"
       @blur="commit"

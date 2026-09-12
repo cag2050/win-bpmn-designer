@@ -91,7 +91,9 @@ watch(
 
 <template>
   <div class="win-bpmn-panel">
-    <header class="win-bpmn-panel__header">{{ t('designer.panel.title') }}</header>
+    <header class="win-bpmn-panel__header">
+      <slot name="panel-header" :element="target">{{ t('designer.panel.title') }}</slot>
+    </header>
 
     <p v-if="!target" class="win-bpmn-panel__empty">{{ t('designer.panel.empty') }}</p>
 
@@ -102,7 +104,10 @@ watch(
         :name="group.id"
         :title="t(`designer.panel.group.${group.id}`)"
       >
-        <component :is="group.component" :element="target" :locale="props.locale" />
+        <!-- 内置组作为回退内容：业务方可用 #group-<id> 整组替换 -->
+        <slot :name="`group-${group.id}`" :element="target" :locale="props.locale">
+          <component :is="group.component" :element="target" :locale="props.locale" />
+        </slot>
       </ElCollapseItem>
     </ElCollapse>
   </div>

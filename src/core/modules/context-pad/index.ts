@@ -1,3 +1,7 @@
+import type { Injector } from 'didi'
+
+import { resolveReadonlyStore } from '@/core/modules/readonly'
+import type { ReadonlyStore } from '@/core/modules/readonly'
 import type { ContextPadEntries } from '@/types'
 
 /**
@@ -16,17 +20,22 @@ interface ContextPadFilterConfig {
 
 /** 按白名单裁剪右键快捷操作，机制与 PaletteFilterProvider 相同（返回 updater 函数）。 */
 export default class ContextPadFilterProvider {
-  static $inject = ['contextPad', 'config.contextPadFilter']
+  static $inject = ['contextPad', 'injector', 'config.contextPadFilter']
 
   private readonly items?: string[]
+  private readonly readonlyStore?: ReadonlyStore
 
-  constructor(contextPad: ContextPad, config?: ContextPadFilterConfig) {
+  constructor(contextPad: ContextPad, injector: Injector, config?: ContextPadFilterConfig) {
     this.items = config?.items
+    this.readonlyStore = resolveReadonlyStore(injector)
     contextPad.registerProvider(FILTER_PRIORITY, this)
   }
 
   private filter(): (entries: ContextPadEntries) => ContextPadEntries {
     return (entries) => {
+      // 只读下整条清空（另有 contextPad.open.allowed 的否决兜底）
+      if (this.readonlyStore?.readonly) return {}
+
       const { items } = this
       // 默认不裁剪
       if (!items?.length) return entries

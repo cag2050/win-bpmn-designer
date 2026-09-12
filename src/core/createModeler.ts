@@ -3,6 +3,8 @@ import Modeler from 'bpmn-js/lib/Modeler'
 import flowableModdle from '@/core/moddle/flowable.json'
 import { ContextPadFilterModule } from '@/core/modules/context-pad'
 import { PaletteFilterModule } from '@/core/modules/palette'
+import { createReadonlyModule } from '@/core/modules/readonly'
+import type { ReadonlyStore } from '@/core/modules/readonly'
 import { createTranslateModule } from '@/core/modules/translate'
 import type { BpmnModeler, LocaleStore, ModelerOptions } from '@/types'
 
@@ -14,6 +16,8 @@ export interface CreateModelerParams extends ModelerOptions {
   container: HTMLElement
   /** 词条容器，切换语言时改写它再触发 i18n.changed 即可 */
   localeStore: LocaleStore
+  /** 只读标志容器，切换时走 setModelerReadonly */
+  readonlyStore: ReadonlyStore
 }
 
 /**
@@ -28,6 +32,7 @@ export function createModeler(params: CreateModelerParams): BpmnModeler {
   const {
     container,
     localeStore,
+    readonlyStore,
     additionalModules = [],
     moddleExtensions = {},
     paletteItems,
@@ -38,6 +43,7 @@ export function createModeler(params: CreateModelerParams): BpmnModeler {
     container,
     additionalModules: [
       createTranslateModule(localeStore),
+      createReadonlyModule(readonlyStore),
       PaletteFilterModule,
       ContextPadFilterModule,
       // 用户模块放最后，可以覆盖本库的任何一个

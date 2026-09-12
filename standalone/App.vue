@@ -48,7 +48,7 @@ function onReady(): void {
 }
 
 function onChange(): void {
-  postToHost('designer:change', { dirty: true }, allowedOrigin)
+  postToHost('designer:change', { dirty: designerRef.value?.dirty ?? true }, allowedOrigin)
 }
 
 function onError(error: unknown): void {

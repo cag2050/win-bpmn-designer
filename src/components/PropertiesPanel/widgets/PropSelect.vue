@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ElOption, ElSelect } from 'element-plus'
 
+import { useReadonly } from '@/composables/useReadonly'
 import type { SelectOption } from '@/types'
 
 defineOptions({ name: 'PropSelect' })
@@ -17,6 +18,8 @@ const props = withDefaults(
   { modelValue: undefined, placeholder: undefined, hint: undefined, clearable: false },
 )
 
+const readonly = useReadonly()
+
 const emit = defineEmits<{ 'update:modelValue': [value: string | undefined] }>()
 
 // 下拉是原子提交，不需要 PropText 那种本地草稿镜像
@@ -32,6 +35,7 @@ function onChange(value: unknown): void {
       :model-value="props.modelValue"
       :placeholder="props.placeholder"
       :clearable="props.clearable"
+      :disabled="readonly"
       size="small"
       @change="onChange"
       @clear="onChange(undefined)"

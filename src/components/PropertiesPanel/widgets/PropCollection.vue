@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { shallowRef, watch } from 'vue'
 
+import { useReadonly } from '@/composables/useReadonly'
 import type { ModdleElement } from '@/types'
 
 defineOptions({ name: 'PropCollection' })
@@ -14,6 +15,8 @@ const props = withDefaults(
   }>(),
   { addLabel: '+', emptyText: undefined },
 )
+
+const readonly = useReadonly()
 
 const emit = defineEmits<{ add: []; remove: [item: ModdleElement, index: number] }>()
 
@@ -43,7 +46,12 @@ function toggle(item: ModdleElement): void {
   <div class="win-bpmn-panel__collection">
     <div class="win-bpmn-panel__collection-head">
       <label class="win-bpmn-panel__label">{{ props.label }}</label>
-      <button type="button" class="win-bpmn-panel__collection-add" @click="emit('add')">
+      <button
+        v-if="!readonly"
+        type="button"
+        class="win-bpmn-panel__collection-add"
+        @click="emit('add')"
+      >
         {{ props.addLabel }}
       </button>
     </div>
@@ -71,6 +79,7 @@ function toggle(item: ModdleElement): void {
           </span>
         </button>
         <button
+          v-if="!readonly"
           type="button"
           class="win-bpmn-panel__collection-remove"
           @click="emit('remove', item, index)"

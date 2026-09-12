@@ -5,7 +5,7 @@ import { useElementProps } from '@/composables/useElementProps'
 import { translate } from '@/locales'
 import type { BpmnElement, LocaleName, ModdleElement } from '@/types'
 
-import PropText from '../widgets/PropText.vue'
+import PropResolver from '../widgets/PropResolver.vue'
 
 defineOptions({ name: 'ConditionGroup' })
 
@@ -46,8 +46,10 @@ const condition = computed<string | undefined>({
 
 <template>
   <div class="win-bpmn-panel__group">
-    <PropText
+    <PropResolver
       :label="t('designer.panel.conditionExpression')"
+      name="expressionEditor"
+      :element="props.element"
       :placeholder="t('designer.panel.placeholder.condition')"
       :hint="t('designer.panel.hint.condition')"
       :model-value="condition"

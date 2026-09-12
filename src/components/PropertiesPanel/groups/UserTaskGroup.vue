@@ -5,7 +5,7 @@ import { useElementProps, useProperty } from '@/composables/useElementProps'
 import { translate } from '@/locales'
 import type { BpmnElement, LocaleName } from '@/types'
 
-import PropList from '../widgets/PropList.vue'
+import PropResolver from '../widgets/PropResolver.vue'
 import PropSwitch from '../widgets/PropSwitch.vue'
 import PropText from '../widgets/PropText.vue'
 
@@ -32,25 +32,35 @@ const formFieldValidation = useProperty<boolean>(bag, 'formFieldValidation')
 
 <template>
   <div class="win-bpmn-panel__group">
-    <PropText
+    <PropResolver
       :label="t('designer.panel.assignee')"
+      name="userPicker"
+      :element="props.element"
       :placeholder="t('designer.panel.placeholder.expression')"
       :model-value="assignee"
       @update:model-value="assignee = $event"
     />
-    <PropText
+    <PropResolver
       :label="t('designer.panel.owner')"
+      name="userPicker"
+      :element="props.element"
       :model-value="owner"
       @update:model-value="owner = $event"
     />
-    <PropList
+    <PropResolver
       :label="t('designer.panel.candidateUsers')"
+      name="userPicker"
+      :element="props.element"
+      multiple
       :hint="t('designer.panel.hint.commaSeparated')"
       :model-value="candidateUsers"
       @update:model-value="candidateUsers = $event"
     />
-    <PropList
+    <PropResolver
       :label="t('designer.panel.candidateGroups')"
+      name="groupPicker"
+      :element="props.element"
+      multiple
       :hint="t('designer.panel.hint.commaSeparated')"
       :model-value="candidateGroups"
       @update:model-value="candidateGroups = $event"
@@ -61,8 +71,10 @@ const formFieldValidation = useProperty<boolean>(bag, 'formFieldValidation')
       :model-value="dueDate"
       @update:model-value="dueDate = $event"
     />
-    <PropText
+    <PropResolver
       :label="t('designer.panel.formKey')"
+      name="formPicker"
+      :element="props.element"
       :model-value="formKey"
       @update:model-value="formKey = $event"
     />
@@ -71,8 +83,10 @@ const formFieldValidation = useProperty<boolean>(bag, 'formFieldValidation')
       :model-value="priority"
       @update:model-value="priority = $event"
     />
-    <PropText
+    <PropResolver
       :label="t('designer.panel.skipExpression')"
+      name="expressionEditor"
+      :element="props.element"
       :placeholder="t('designer.panel.placeholder.expression')"
       :model-value="skipExpression"
       @update:model-value="skipExpression = $event"

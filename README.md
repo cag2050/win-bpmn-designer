@@ -4,9 +4,9 @@
 
 完整技术方案见 [`doc/方案.md`](./doc/方案.md)。
 
-> 当前进度：**M3 已完成**（脚手架、三套构建、Modeler 封装、工具栏、全量汉化、
-> Flowable moddle 扩展、属性面板框架与 13 个内置属性组）。
-> 已覆盖常见审批流的建模需求；resolvers / slots / 只读模式 / standalone 在 M4 落地。
+> 当前进度：**M4 已完成**（脚手架、三套构建、Modeler 封装、工具栏、全量汉化、
+> Flowable moddle 扩展、13 个内置属性组、resolvers / 具名 slot / 只读预览 / validate）。
+> 业务方已可接入自己的选人组件；i18n 完善、单测、发布 CI 在 M5 落地。
 
 ## 安装
 
@@ -62,6 +62,7 @@ async function submit() {
 | `exportSVG()` | 导出 SVG |
 | `undo()` / `redo()` | 撤销 / 重做 |
 | `zoom(step)` / `fitViewport()` | 缩放 / 适应画布 |
+| `validate()` | 基础建模校验，返回 `{ valid, issues }` |
 | `save()` | 导出并派发 `save` 事件 |
 | `getModeler()` | 逃生舱：拿到原生 bpmn-js Modeler |
 
@@ -73,6 +74,8 @@ async function submit() {
 | `locale` | 取全局配置 | `zh-CN` / `en-US`，支持运行时切换 |
 | `toolbar` | `true` | 是否渲染内置工具栏；传入 `#toolbar` slot 时整条替换 |
 | `panel` | `true` | 是否渲染内置属性面板；传入 `#panel` slot 时整块替换 |
+| `readonly` | `false` | 只读预览：可平移/缩放/选中查看，但改不动 |
+| `resolvers` | — | 业务扩展点，见下文「接入自己的选人组件」 |
 | `options.paletteItems` | 全部显示 | palette 白名单，填内置条目 id（如 `create.task`） |
 | `options.contextPadItems` | 全部显示 | context-pad 白名单（如 `append.end-event`、`connect`） |
 
@@ -112,6 +115,48 @@ registerPropertyGroup({
 组内可直接复用 `useElementProps` / `useProperty` 读写属性；一对多集合用
 `useExtensionCollection`（extensionElements 直接子元素）与 `useModdleCollection`（嵌套 isMany 属性），
 底层是 `extension-elements.ts` 里的一组 helper。
+
+### 接入自己的选人组件（resolvers）
+
+真实项目里 `assignee` 从来不是手填字符串。传 `resolvers` 即可用宿主自己的组件替换对应字段，
+**未传的项自动降级为普通输入框**，不影响其他字段。
+
+```vue
+<BpmnDesigner :resolvers="{ userPicker: UserPicker, groupPicker: GroupPicker }" />
+```
+
+宿主组件只需是个受控组件，无需了解 Flowable 的存储细节：
+
+```ts
+props:  { modelValue, multiple?, label?, disabled?, element? }
+emits:  update:modelValue
+```
+
+`multiple` 为真时收发 `string[]`，否则收发 `string | undefined` —— XML 里的逗号分隔串
+由库内负责拆拼。清空时提交 `undefined`，属性会从 XML 中移除。
+
+| resolver | 接管的字段 |
+| --- | --- |
+| `userPicker` | 办理人、拥有者、候选人、候选发起人 |
+| `groupPicker` | 候选组、候选发起组 |
+| `formPicker` | 表单标识 |
+| `expressionEditor` | 流转条件、跳过表达式、集合、完成条件等表达式类字段 |
+| `classPicker` | 服务任务与监听器的类 / 委托表达式 |
+
+### 具名 slot
+
+| slot | 说明 |
+| --- | --- |
+| `#toolbar` | 整条替换工具栏（`slotProps: { dirty, save }`） |
+| `#panel` | 整块替换属性面板 |
+| `#panel-header` | 只替换面板标题栏（`slotProps: { element }`） |
+| `#group-<id>` | 替换某一个属性组，如 `#group-user-task`（`slotProps: { element, locale }`） |
+
+### 只读预览
+
+`:readonly` 为真时禁止一切修改（拖拽、连线、缩放手柄、右键菜单、双击改名、删除快捷键
+与撤销重做），但**平移、缩放、选中查看照常可用**，适合「流程详情」这类预览场景。
+可运行时来回切换，不会丢失当前图与撤销栈。
 
 ### iframe 集成（非 Vue 宿主）
 
